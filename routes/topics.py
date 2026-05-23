@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from models import db
-from models.topic import Topic, TopicSource
+from models.topic import Topic, TopicSource, UserHiddenTopic
 from models.reaction import TopicReaction
 from models.user import User
 from utils import login_required, validate_csrf
@@ -21,6 +21,9 @@ def feed():
     if user.interests:
         interest_names = [i.name for i in user.interests]
         query = query.filter(Topic.category.in_(interest_names))
+
+    hidden_ids = db.session.query(UserHiddenTopic.topic_id).filter_by(user_id=user.id)
+    query = query.filter(~Topic.id.in_(hidden_ids))
 
     if category:
         query = query.filter_by(category=category)
@@ -84,3 +87,13 @@ def react(id):
 
     db.session.commit()
     return redirect(url_for('topics.topic_detail', id=id))
+
+
+@topics_bp.route('/topic/<int:id>/hide', methods=['POST'])
+@login_required
+def hide_topic(id):
+    existing = UserHiddenTopic.query.filter_by(user_id=session['user_id'], topic_id=id).first()
+    if not existing:
+        db.session.add(UserHiddenTopic(user_id=session['user_id'], topic_id=id))
+        db.session.commit()
+    return redirect(url_for('topics.feed'))

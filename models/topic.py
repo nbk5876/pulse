@@ -16,6 +16,15 @@ class Topic(db.Model):
     reactions = db.relationship('TopicReaction', backref='topic', lazy=True, cascade='all, delete-orphan')
 
 
+class UserHiddenTopic(db.Model):
+    __tablename__ = 'user_hidden_topics'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'), nullable=False)
+    __table_args__ = (db.UniqueConstraint('user_id', 'topic_id'),)
+
+
 class TopicSource(db.Model):
     __tablename__ = 'topic_sources'
 

@@ -21,17 +21,23 @@
     <div class="topic-grid">
       {% for item in topic_data %}
         {% set topic = item.topic %}
-        <a href="/topic/{{ topic.id }}" class="topic-card">
-          {% if topic.category %}
-            <span class="category-badge cat-{{ topic.category | lower | replace(' ', '-') }}">{{ topic.category }}</span>
-          {% endif %}
-          <h2 class="topic-card-title">{{ topic.title }}</h2>
-          <p class="topic-card-summary">{{ topic.summary[:160] }}{% if topic.summary|length > 160 %}…{% endif %}</p>
-          <div class="topic-card-meta">
-            <span class="reaction-count">{{ item.reaction_count }} reaction{% if item.reaction_count != 1 %}s{% endif %}</span>
-            <span class="topic-date">{{ topic.created_at.strftime('%b %d') }}</span>
-          </div>
-        </a>
+        <div class="topic-card">
+          <a href="/topic/{{ topic.id }}" class="topic-card-link">
+            {% if topic.category %}
+              <span class="category-badge cat-{{ topic.category | lower | replace(' ', '-') }}">{{ topic.category }}</span>
+            {% endif %}
+            <h2 class="topic-card-title">{{ topic.title }}</h2>
+            <p class="topic-card-summary">{{ topic.summary[:160] }}{% if topic.summary|length > 160 %}…{% endif %}</p>
+            <div class="topic-card-meta">
+              <span class="reaction-count">{{ item.reaction_count }} reaction{% if item.reaction_count != 1 %}s{% endif %}</span>
+              <span class="topic-date">{{ topic.created_at.strftime('%b %d') }}</span>
+            </div>
+          </a>
+          <form method="POST" action="/topic/{{ topic.id }}/hide" class="hide-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="hide-btn" title="Hide from my feed">✕</button>
+          </form>
+        </div>
       {% endfor %}
     </div>
   {% else %}
