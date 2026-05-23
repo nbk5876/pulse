@@ -3,18 +3,29 @@ import requests
 from models import db
 from models.topic import Topic, TopicSource
 
+# Trusted U.S. news domains only
+TRUSTED_DOMAINS = (
+    'apnews.com,reuters.com,npr.org,politico.com,thehill.com,'
+    'washingtonpost.com,nytimes.com,wsj.com,usatoday.com,'
+    'cbsnews.com,nbcnews.com,abcnews.go.com,foxnews.com,'
+    'bloomberg.com,axios.com,propublica.org,kffhealthnews.org,'
+    'healthaffairs.org,governing.com,stateline.org'
+)
+
 CATEGORY_QUERIES = {
-    'Economy':          'economy OR inflation OR GDP OR federal reserve',
-    'Immigration':      'immigration OR border OR migrants',
-    'Climate':          'climate change OR climate policy OR emissions',
-    'Healthcare':       'healthcare OR health insurance OR Medicare OR Medicaid',
-    'Housing':          'housing costs OR rent prices OR mortgage OR housing market',
-    'Foreign Policy':   'foreign policy OR Iran OR Ukraine OR NATO OR diplomacy',
-    'Education':        'education policy OR school OR student loans OR university',
-    'Technology':       'technology OR artificial intelligence OR AI regulation OR cybersecurity',
-    'Local Government': 'local government OR city council OR municipal OR zoning',
-    'National Politics':'Congress OR Senate OR House OR legislation OR White House',
+    'Economy':          '"economy" OR "inflation" OR "federal reserve" OR "unemployment" OR "GDP"',
+    'Immigration':      '"immigration policy" OR "border security" OR "deportation" OR "asylum"',
+    'Climate':          '"climate change" OR "climate policy" OR "clean energy" OR "carbon emissions"',
+    'Healthcare':       '"health care" OR "health insurance" OR "Medicare" OR "Medicaid" OR "drug prices"',
+    'Housing':          '"housing costs" OR "rent prices" OR "affordable housing" OR "housing market"',
+    'Foreign Policy':   '"foreign policy" OR "Iran" OR "Ukraine" OR "NATO" OR "diplomacy" OR "sanctions"',
+    'Education':        '"education policy" OR "student loans" OR "school funding" OR "college tuition"',
+    'Technology':       '"artificial intelligence" OR "AI regulation" OR "tech policy" OR "cybersecurity"',
+    'Local Government': '"local government" OR "city council" OR "municipal budget" OR "zoning"',
+    'National Politics': '"Congress" OR "Senate" OR "House of Representatives" OR "White House" OR "legislation"',
 }
+
+MIN_DESCRIPTION_LENGTH = 80
 
 
 def fetch_news_for_category(category, api_key, page_size=5):
@@ -28,6 +39,7 @@ def fetch_news_for_category(category, api_key, page_size=5):
         'language': 'en',
         'sortBy': 'publishedAt',
         'pageSize': page_size,
+        'domains': TRUSTED_DOMAINS,
         'apiKey': api_key,
     }
     resp = requests.get(url, params=params, timeout=10)
@@ -53,6 +65,10 @@ def fetch_and_store_news():
             description = (article.get('description') or '').strip()
 
             if not title or title == '[Removed]':
+                skipped += 1
+                continue
+
+            if len(description) < MIN_DESCRIPTION_LENGTH:
                 skipped += 1
                 continue
 
