@@ -37,6 +37,10 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="hide-btn" title="Hide from my feed">✕</button>
           </form>
+          <div class="card-summarize">
+            <button class="summarize-btn" data-topic-id="{{ topic.id }}" data-csrf="{{ csrf_token() }}">AI Summary</button>
+            <div class="summarize-result" id="summary-{{ topic.id }}" style="display:none"></div>
+          </div>
         </div>
       {% endfor %}
     </div>
@@ -48,4 +52,42 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.summarize-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const topicId = this.dataset.topicId;
+    const csrf = this.dataset.csrf;
+    const resultDiv = document.getElementById('summary-' + topicId);
+
+    if (resultDiv.style.display !== 'none') {
+      resultDiv.style.display = 'none';
+      this.textContent = 'AI Summary';
+      return;
+    }
+
+    this.textContent = 'Loading…';
+    this.disabled = true;
+
+    try {
+      const resp = await fetch('/topic/' + topicId + '/summarize', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'csrf_token=' + encodeURIComponent(csrf),
+      });
+      const data = await resp.json();
+      resultDiv.textContent = data.summary;
+      resultDiv.style.display = 'block';
+      this.textContent = 'Hide Summary';
+    } catch (e) {
+      resultDiv.textContent = 'Could not load summary.';
+      resultDiv.style.display = 'block';
+      this.textContent = 'AI Summary';
+    }
+    this.disabled = false;
+  });
+});
+</script>
 {% endblock %}

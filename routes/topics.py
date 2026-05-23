@@ -102,6 +102,28 @@ def add_comment(id):
     return redirect(url_for('topics.topic_detail', id=id))
 
 
+@topics_bp.route('/topic/<int:id>/summarize', methods=['POST'])
+@login_required
+def summarize_topic(id):
+    import os
+    from openai import OpenAI
+    topic = Topic.query.get_or_404(id)
+    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+    prompt = (
+        f'Topic: {topic.title}\n\n'
+        f'Summary: {topic.summary}\n\n'
+        'Based on your knowledge, provide a concise 3-4 sentence expanded summary of this topic. '
+        'Focus on key facts, context, and why it matters. Do not make up specific numbers or quotes.'
+    )
+    response = client.chat.completions.create(
+        model='gpt-4o-mini',
+        messages=[{'role': 'user', 'content': prompt}],
+        max_tokens=300,
+    )
+    text = response.choices[0].message.content.strip()
+    return jsonify({'summary': text})
+
+
 @topics_bp.route('/topic/<int:id>/hide', methods=['POST'])
 @login_required
 def hide_topic(id):

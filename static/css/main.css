@@ -360,6 +360,27 @@ img { max-width: 100%; }
   line-height: 1;
 }
 .hide-btn:hover { background: #f0f0f0; color: #999; }
+.card-summarize { padding: 0 16px 14px; }
+.summarize-btn {
+  font-size: 0.75rem;
+  color: #2563eb;
+  background: none;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.summarize-btn:hover { background: #eff6ff; }
+.summarize-result {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.6;
+  background: #f8f9fa;
+  border-left: 3px solid #2563eb;
+  padding: 10px 12px;
+  border-radius: 0 4px 4px 0;
+}
 .topic-card-title {
   font-family: Georgia, serif;
   font-size: 1.05rem;
