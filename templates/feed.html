@@ -30,7 +30,7 @@
             <p class="topic-card-summary">{{ topic.summary[:160] }}{% if topic.summary|length > 160 %}…{% endif %}</p>
             <div class="topic-card-meta">
               <span class="reaction-count">{{ item.reaction_count }} reaction{% if item.reaction_count != 1 %}s{% endif %}</span>
-              <span class="topic-date">{{ topic.created_at.strftime('%b %d') }}</span>
+              <span class="topic-date">{{ topic.created_at.strftime('%b %d %I:%M %p') }}</span>
             </div>
           </a>
           <form method="POST" action="/topic/{{ topic.id }}/hide" class="hide-form">
