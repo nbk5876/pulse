@@ -75,7 +75,9 @@ def fetch_and_store_news():
                 source_name=source_name,
                 source_url=url,
             ))
+            print(f'[+] Added ({category}): {title}')
             added += 1
 
     db.session.commit()
+    print(f'Done: {added} added, {skipped} skipped.')
     return {'added': added, 'skipped': skipped}
