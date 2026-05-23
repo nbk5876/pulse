@@ -29,11 +29,13 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(civic_units_bp)
 
-    # Seed route — development only
+    # Seed route — requires SEED_SECRET param
     @app.route('/admin/seed')
     def admin_seed():
-        if os.environ.get('FLASK_ENV') != 'development':
-            return 'Not available in production.', 403
+        from flask import request as flask_req
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
         from services.topic_service import seed_interests, seed_topics
         seed_interests()
         seed_topics()
