@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+import os
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from models import db
 from models.topic import Topic, TopicSource, UserHiddenTopic
 from models.comment import Comment
@@ -105,7 +106,6 @@ def add_comment(id):
 @topics_bp.route('/topic/<int:id>/summarize', methods=['POST'])
 @login_required
 def summarize_topic(id):
-    import os
     from openai import OpenAI
     topic = Topic.query.get_or_404(id)
     client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
