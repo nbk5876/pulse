@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} · Pulse{% endblock %}
+
+{% block content %}
+<div class="page-container page-container-narrow">
+
+  <a href="/feed" class="back-link">← Back to Feed</a>
+
+  <article class="topic-article">
+    {% if topic.category %}
+      <span class="category-badge cat-{{ topic.category | lower | replace(' ', '-') }}">{{ topic.category }}</span>
+    {% endif %}
+    <h1 class="topic-title">{{ topic.title }}</h1>
+    <p class="topic-meta">{{ topic.created_at.strftime('%B %d, %Y') }}</p>
+    <div class="topic-summary">{{ topic.summary }}</div>
+  </article>
+
+  {% if sources %}
+  <section class="topic-sources">
+    <h2 class="section-title">Sources</h2>
+    <ul class="source-list">
+      {% for source in sources %}
+        <li><a href="{{ source.source_url }}" target="_blank" rel="noopener noreferrer">{{ source.source_name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="topic-reactions">
+    <h2 class="section-title">Reactions</h2>
+    <form method="POST" action="/topic/{{ topic.id }}/react">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="reaction-buttons">
+        {% for rt in reaction_types %}
+          <button type="submit" name="reaction_type" value="{{ rt }}"
+                  class="reaction-btn {% if user_reaction == rt %}reaction-btn-active{% endif %}">
+            <span class="reaction-label">{{ rt }}</span>
+            <span class="reaction-count-badge">{{ reaction_counts[rt] }}</span>
+          </button>
+        {% endfor %}
+      </div>
+      {% if user_reaction %}
+        <p class="reaction-note">Your reaction: <strong>{{ user_reaction }}</strong> · Click it again to remove.</p>
+      {% endif %}
+    </form>
+  </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Feed · Pulse{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+  <div class="feed-header">
+    <h1 class="page-title">Your Feed</h1>
+    {% if categories %}
+    <div class="category-filters">
+      <a href="/feed" class="filter-btn {% if not selected_category %}filter-btn-active{% endif %}">All</a>
+      {% for cat in categories %}
+        <a href="/feed?category={{ cat }}" class="filter-btn {% if selected_category == cat %}filter-btn-active{% endif %}">{{ cat }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if topic_data %}
+    <div class="topic-grid">
+      {% for item in topic_data %}
+        {% set topic = item.topic %}
+        <a href="/topic/{{ topic.id }}" class="topic-card">
+          {% if topic.category %}
+            <span class="category-badge cat-{{ topic.category | lower | replace(' ', '-') }}">{{ topic.category }}</span>
+          {% endif %}
+          <h2 class="topic-card-title">{{ topic.title }}</h2>
+          <p class="topic-card-summary">{{ topic.summary[:160] }}{% if topic.summary|length > 160 %}…{% endif %}</p>
+          <div class="topic-card-meta">
+            <span class="reaction-count">{{ item.reaction_count }} reaction{% if item.reaction_count != 1 %}s{% endif %}</span>
+            <span class="topic-date">{{ topic.created_at.strftime('%b %d') }}</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p class="empty-state-text">No topics found for your current interests.</p>
+      <a href="/interests" class="btn btn-secondary">Update Interests</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

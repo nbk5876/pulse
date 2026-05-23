@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile · Pulse{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+    <h1 class="form-title">Edit Profile</h1>
+    <form method="POST" action="/profile/edit" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="bio" class="form-label">Bio <span class="form-hint">(optional)</span></label>
+        <textarea id="bio" name="bio" class="form-input form-textarea" rows="4">{{ user.bio or '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city" class="form-label">City</label>
+          <input type="text" id="city" name="city" class="form-input"
+                 value="{{ user.city or '' }}">
+        </div>
+        <div class="form-group">
+          <label for="state" class="form-label">State</label>
+          <input type="text" id="state" name="state" class="form-input"
+                 value="{{ user.state or '' }}" maxlength="50">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="political_alignment" class="form-label">Political Alignment</label>
+        <select id="political_alignment" name="political_alignment" class="form-input form-select">
+          <option value="">Prefer not to say</option>
+          {% for a in alignments %}
+            <option value="{{ a }}" {% if user.political_alignment == a %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/profile" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

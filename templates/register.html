@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Register · Pulse{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+    <h1 class="form-title">Create Account</h1>
+    <form method="POST" action="/register" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" name="username" class="form-input"
+               value="{{ form.get('username', '') }}" autocomplete="username" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" class="form-input"
+               value="{{ form.get('email', '') }}" autocomplete="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password <span class="form-hint">(8 characters minimum)</span></label>
+        <input type="password" id="password" name="password" class="form-input"
+               autocomplete="new-password" minlength="8" required>
+      </div>
+
+      <div class="form-group">
+        <label for="political_alignment" class="form-label">Political Alignment <span class="form-hint">(optional)</span></label>
+        <select id="political_alignment" name="political_alignment" class="form-input form-select">
+          <option value="">Prefer not to say</option>
+          {% for a in alignments %}
+            <option value="{{ a }}" {% if form.get('alignment') == a %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+
+    <p class="form-footer-link">
+      Already have an account? <a href="/login">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

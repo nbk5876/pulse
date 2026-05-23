@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Pulse · Civic Topic Discovery{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <h1 class="hero-title">Pulse</h1>
+    <p class="hero-tagline">Discover the civic topics that matter to your community.</p>
+    <p class="hero-desc">
+      Pulse surfaces AI-curated civic and political topics — filtered to your interests,
+      presented without noise. Read, reflect, and react. No algorithms chasing outrage.
+      No endless scroll.
+    </p>
+    <div class="hero-ctas">
+      <a href="/register" class="btn btn-primary">Get Started</a>
+      <a href="/login" class="btn btn-secondary">Log In</a>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="features-inner">
+    <div class="feature-card">
+      <div class="feature-icon">🗞</div>
+      <h3>Curated Topics</h3>
+      <p>Civic issues selected for relevance and clarity — not for clicks or controversy.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Your Interests</h3>
+      <p>Filter by the issues you care about: housing, climate, economy, healthcare, and more.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <h3>Civic Units</h3>
+      <p>Connect with neighbors and community groups around shared local priorities. Coming soon.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

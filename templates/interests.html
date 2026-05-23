@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your Interests · Pulse{% endblock %}
+
+{% block content %}
+<div class="page-container page-container-narrow">
+  <h1 class="page-title">Your Interests</h1>
+  <p class="page-subtitle">Select the topics you want to follow. Your feed will be filtered to match.</p>
+
+  <form method="POST" action="/interests">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="interests-grid">
+      {% for interest in all_interests %}
+        <label class="interest-checkbox {% if interest.id in user_interest_ids %}interest-checkbox-checked{% endif %}">
+          <input type="checkbox" name="interests" value="{{ interest.id }}"
+                 {% if interest.id in user_interest_ids %}checked{% endif %}>
+          <span class="interest-checkbox-label">{{ interest.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions" style="margin-top: 32px;">
+      <button type="submit" class="btn btn-primary">Save Interests</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Profile · Pulse{% endblock %}
+
+{% block content %}
+<div class="page-container page-container-narrow">
+
+  <div class="profile-header">
+    <h1 class="profile-username">{{ user.username }}</h1>
+    <a href="/profile/edit" class="btn btn-secondary btn-sm">Edit Profile</a>
+  </div>
+
+  <div class="profile-card">
+    {% if user.bio %}
+      <p class="profile-bio">{{ user.bio }}</p>
+    {% endif %}
+
+    <div class="profile-fields">
+      {% if user.political_alignment %}
+      <div class="profile-field">
+        <span class="profile-field-label">Alignment</span>
+        <span class="profile-field-value">{{ user.political_alignment }}</span>
+      </div>
+      {% endif %}
+      {% if user.city or user.state %}
+      <div class="profile-field">
+        <span class="profile-field-label">Location</span>
+        <span class="profile-field-value">
+          {{ [user.city, user.state] | select | join(', ') }}
+        </span>
+      </div>
+      {% endif %}
+      <div class="profile-field">
+        <span class="profile-field-label">Member since</span>
+        <span class="profile-field-value">{{ user.created_at.strftime('%B %Y') }}</span>
+      </div>
+    </div>
+
+    {% if user.interests %}
+    <div class="profile-interests">
+      <span class="profile-field-label">Interests</span>
+      <div class="interest-tags">
+        {% for interest in user.interests %}
+          <span class="interest-tag">{{ interest.name }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <p class="profile-no-interests">
+      No interests selected. <a href="/interests">Add some</a> to personalize your feed.
+    </p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
