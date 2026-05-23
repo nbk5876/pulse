@@ -292,6 +292,7 @@ img { max-width: 100%; }
 
 /* ── Feed ── */
 .feed-header { margin-bottom: 24px; }
+.feed-user-info { font-size: 0.78rem; color: #888; margin-top: 4px; }
 .category-filters {
   display: flex;
   flex-wrap: wrap;

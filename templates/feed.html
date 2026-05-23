@@ -6,6 +6,7 @@
 
   <div class="feed-header">
     <h1 class="page-title">Your Feed</h1>
+    <p class="feed-user-info">ID: {{ user.id }} · {{ user.email }}</p>
     {% if categories %}
     <div class="category-filters">
       <a href="/feed" class="filter-btn {% if not selected_category %}filter-btn-active{% endif %}">All</a>
