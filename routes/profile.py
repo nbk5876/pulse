@@ -25,6 +25,12 @@ def edit_profile():
             flash('Invalid form submission.', 'error')
             return redirect(url_for('profile.edit_profile'))
 
+        new_username = request.form.get('username', '').strip()
+        if new_username and new_username != user.username:
+            if User.query.filter_by(username=new_username).first():
+                flash('That display name is already taken.', 'error')
+                return redirect(url_for('profile.edit_profile'))
+            user.username = new_username
         user.bio = request.form.get('bio', '').strip() or None
         user.city = request.form.get('city', '').strip() or None
         user.state = request.form.get('state', '').strip() or None
