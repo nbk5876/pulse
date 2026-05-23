@@ -29,6 +29,17 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(civic_units_bp)
 
+    # Fetch news route — requires SEED_SECRET param
+    @app.route('/admin/fetch-news')
+    def admin_fetch_news():
+        from flask import request as flask_req
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        from services.news_service import fetch_and_store_news
+        result = fetch_and_store_news()
+        return jsonify(result)
+
     # Seed route — requires SEED_SECRET param
     @app.route('/admin/seed')
     def admin_seed():
