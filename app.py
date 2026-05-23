@@ -8,6 +8,46 @@ from utils import generate_csrf_token
 load_dotenv()
 
 
+ADMIN_TOPICS_HTML = """
+<!doctype html>
+<html>
+<head>
+  <title>Admin: Topics</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 1.4rem; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { text-align: left; border-bottom: 2px solid #ccc; padding: 6px 8px; }
+    td { border-bottom: 1px solid #eee; padding: 6px 8px; vertical-align: top; }
+    .cat { font-size: 0.75rem; color: #666; }
+    .del { background: #c0392b; color: white; border: none; padding: 4px 10px; cursor: pointer; border-radius: 3px; }
+    .del:hover { background: #a93226; }
+  </style>
+</head>
+<body>
+  <h1>Topics ({{ topics|length }})</h1>
+  <table>
+    <tr><th>#</th><th>Category</th><th>Title</th><th>Date</th><th></th></tr>
+    {% for t in topics %}
+    <tr>
+      <td>{{ t.id }}</td>
+      <td class="cat">{{ t.category }}</td>
+      <td>{{ t.title }}</td>
+      <td>{{ t.created_at.strftime('%m/%d') }}</td>
+      <td>
+        <form method="POST" action="/admin/topics/{{ t.id }}/delete?secret={{ secret }}"
+              onsubmit="return confirm('Delete this topic?')">
+          <button class="del" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
+"""
+
+
 def create_app():
     app = Flask(__name__)
     env = os.environ.get('FLASK_ENV', 'development')
@@ -28,6 +68,32 @@ def create_app():
     app.register_blueprint(topics_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(civic_units_bp)
+
+    # Admin topics page — list and delete topics
+    @app.route('/admin/topics')
+    def admin_topics():
+        from flask import request as flask_req, render_template_string
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        from models.topic import Topic
+        topics = Topic.query.order_by(Topic.created_at.desc()).all()
+        secret = flask_req.args.get('secret')
+        return render_template_string(ADMIN_TOPICS_HTML, topics=topics, secret=secret)
+
+    @app.route('/admin/topics/<int:topic_id>/delete', methods=['POST'])
+    def admin_delete_topic(topic_id):
+        from flask import request as flask_req
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        from models.topic import Topic, TopicSource
+        from models.reaction import TopicReaction
+        TopicReaction.query.filter_by(topic_id=topic_id).delete()
+        TopicSource.query.filter_by(topic_id=topic_id).delete()
+        Topic.query.filter_by(id=topic_id).delete()
+        db.session.commit()
+        return redirect(f'/admin/topics?secret={flask_req.args.get("secret")}')
 
     # Fetch news route — requires SEED_SECRET param
     @app.route('/admin/fetch-news')
