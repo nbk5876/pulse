@@ -86,9 +86,12 @@ def create_app():
         seed_secret = os.environ.get('SEED_SECRET')
         if not seed_secret or flask_req.args.get('secret') != seed_secret:
             return 'Not available.', 403
-        from models.topic import Topic, TopicSource
+        from models.topic import Topic, TopicSource, UserHiddenTopic
         from models.reaction import TopicReaction
+        from models.comment import Comment
+        Comment.query.filter_by(topic_id=topic_id).delete()
         TopicReaction.query.filter_by(topic_id=topic_id).delete()
+        UserHiddenTopic.query.filter_by(topic_id=topic_id).delete()
         TopicSource.query.filter_by(topic_id=topic_id).delete()
         Topic.query.filter_by(id=topic_id).delete()
         db.session.commit()
