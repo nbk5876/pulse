@@ -3,14 +3,6 @@ import requests
 from models import db
 from models.topic import Topic, TopicSource
 
-# Trusted U.S. news domains only
-TRUSTED_DOMAINS = (
-    'apnews.com,reuters.com,npr.org,politico.com,thehill.com,'
-    'washingtonpost.com,nytimes.com,wsj.com,usatoday.com,'
-    'cbsnews.com,nbcnews.com,abcnews.go.com,foxnews.com,'
-    'bloomberg.com,axios.com,propublica.org,kffhealthnews.org,'
-    'healthaffairs.org,governing.com,stateline.org'
-)
 
 CATEGORY_QUERIES = {
     'Economy':          '"economy" OR "inflation" OR "federal reserve" OR "unemployment" OR "GDP"',
@@ -33,17 +25,16 @@ def fetch_news_for_category(category, api_key, page_size=5):
     if not query:
         return []
 
-    url = 'https://newsapi.org/v2/everything'
+    url = 'https://newsapi.org/v2/top-headlines'
     params = {
         'q': query,
-        'language': 'en',
-        'sortBy': 'publishedAt',
+        'country': 'us',
         'pageSize': page_size,
-        'domains': TRUSTED_DOMAINS,
         'apiKey': api_key,
     }
     resp = requests.get(url, params=params, timeout=10)
     if resp.status_code != 200:
+        print(f'NewsAPI error {resp.status_code}: {resp.text}')
         return []
     return resp.json().get('articles', [])
 
