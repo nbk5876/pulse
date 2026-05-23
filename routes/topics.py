@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from models import db
 from models.topic import Topic, TopicSource, UserHiddenTopic
+from models.comment import Comment
 from models.reaction import TopicReaction
 from models.user import User
 from utils import login_required, validate_csrf
@@ -58,9 +59,11 @@ def topic_detail(id):
     if ur:
         user_reaction = ur.reaction_type
 
+    comments = Comment.query.filter_by(topic_id=id).order_by(Comment.created_at.asc()).all()
+
     return render_template('topic_detail.html', topic=topic, sources=sources,
                            reaction_counts=reaction_counts, user_reaction=user_reaction,
-                           reaction_types=REACTION_TYPES)
+                           reaction_types=REACTION_TYPES, comments=comments)
 
 
 @topics_bp.route('/topic/<int:id>/react', methods=['POST'])
@@ -86,6 +89,16 @@ def react(id):
         db.session.add(TopicReaction(user_id=session['user_id'], topic_id=id, reaction_type=reaction_type))
 
     db.session.commit()
+    return redirect(url_for('topics.topic_detail', id=id))
+
+
+@topics_bp.route('/topic/<int:id>/comment', methods=['POST'])
+@login_required
+def add_comment(id):
+    body = request.form.get('body', '').strip()
+    if body:
+        db.session.add(Comment(user_id=session['user_id'], topic_id=id, body=body))
+        db.session.commit()
     return redirect(url_for('topics.topic_detail', id=id))
 
 

@@ -45,5 +45,30 @@
     </form>
   </section>
 
+
+  <section class="topic-comments">
+    <h2 class="section-title">Comments ({{ comments|length }})</h2>
+
+    {% if comments %}
+      <div class="comment-list">
+        {% for comment in comments %}
+          <div class="comment">
+            <div class="comment-meta">
+              <strong class="comment-author">{{ comment.user.username }}</strong>
+              <span class="comment-date">{{ comment.created_at.strftime('%b %d, %Y') }}</span>
+            </div>
+            <p class="comment-body">{{ comment.body }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="/topic/{{ topic.id }}/comment" class="comment-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="body" class="comment-input" rows="3" placeholder="Share your thoughts…" required></textarea>
+      <button type="submit" class="btn btn-primary">Post Comment</button>
+    </form>
+  </section>
+
 </div>
 {% endblock %}

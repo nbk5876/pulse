@@ -427,6 +427,31 @@ img { max-width: 100%; }
 .source-list a { color: var(--teal); }
 
 .topic-reactions { margin-bottom: 40px; }
+
+/* ── Comments ── */
+.topic-comments { margin-top: 40px; }
+.comment-list { margin: 16px 0 24px; display: flex; flex-direction: column; gap: 16px; }
+.comment {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.comment-meta { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; }
+.comment-author { font-size: 0.88rem; color: var(--navy); }
+.comment-date { font-size: 0.78rem; color: #9ca3af; }
+.comment-body { font-size: 0.9rem; color: var(--text); line-height: 1.6; }
+.comment-form { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.comment-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+.comment-input:focus { outline: none; border-color: var(--navy); }
 .reaction-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
