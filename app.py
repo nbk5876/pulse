@@ -35,8 +35,7 @@ ADMIN_TOPICS_HTML = """
       <td>{{ t.title }}</td>
       <td>{{ t.created_at.strftime('%m/%d') }}</td>
       <td>
-        <form method="POST" action="/admin/topics/{{ t.id }}/delete?secret={{ secret }}"
-              onsubmit="return confirm('Delete this topic?')">
+        <form method="POST" action="/admin/topics/{{ t.id }}/delete?secret={{ secret }}">
           <button class="del" type="submit">Delete</button>
         </form>
       </td>
