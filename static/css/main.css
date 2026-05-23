@@ -382,7 +382,8 @@ img { max-width: 100%; }
 .cat-foreign-policy   { background: #dbeafe; color: #1e40af; }
 .cat-education        { background: #ffedd5; color: #9a3412; }
 .cat-technology       { background: #cffafe; color: #155e75; }
-.cat-local-government { background: #f0fdf4; color: #14532d; }
+.cat-local-government  { background: #f0fdf4; color: #14532d; }
+.cat-national-politics { background: #fef2f2; color: #7f1d1d; }
 
 /* ── Topic Detail ── */
 .topic-article { margin-bottom: 36px; }

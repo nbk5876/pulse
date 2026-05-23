@@ -5,6 +5,7 @@ from models.user import Interest
 SEED_INTERESTS = [
     'Economy', 'Immigration', 'Climate', 'Healthcare',
     'Housing', 'Foreign Policy', 'Education', 'Technology', 'Local Government',
+    'National Politics',
 ]
 
 SEED_TOPICS = [
