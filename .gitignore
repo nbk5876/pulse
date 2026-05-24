@@ -11,3 +11,4 @@ build/
 .pytest_cache/
 instance/
 menu.htm
+user-guide.htm

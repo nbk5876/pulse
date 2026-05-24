@@ -1,106 +1,140 @@
 # Pulse
 
-Pulse is a civic topic discovery web application. It surfaces AI-curated civic and political topics filtered to each user's interests, with light reaction tools and a calm, editorial design. No free-form posting, no comments, no algorithmic outrage.
+A civic news discovery and community discussion app for staying informed on the issues that matter.
 
-**Production target:** https://pulse.core3.com  
-**Stack:** Python · Flask · PostgreSQL · HTML/CSS
+**Live app:** https://pulse.core3.com
+
+![Pulse Architecture](static/img/pulse-splash.png)
 
 ---
 
-## Local Development Setup
+## What It Does
+
+Pulse automatically collects civic and political news from trusted RSS sources, uses GPT-4o-mini to filter out sports/entertainment noise and assign categories, then delivers a personalized feed based on each user's selected interests. Users can react, comment, get AI summaries, and discuss in a shared community Thread.
+
+## Architecture
+
+```
+RSS Feeds (AP, NPR, PBS, Politico, The Hill, ABC, CBS, Axios...)
+        │
+        ▼
+  GPT-4o-mini  ←── single batch call per run
+  (filters noise, assigns civic category)
+        │
+        ▼
+   PostgreSQL  (topics, reactions, comments, thread posts)
+        │
+        ▼
+   Flask Web App ──► Users
+```
+
+News is fetched every 12 hours via a Render cron job. Each run makes one request per RSS feed and one GPT batch call — no per-article API costs.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Web framework | Flask (Python) |
+| Database | PostgreSQL via SQLAlchemy |
+| AI filtering & summaries | OpenAI gpt-4o-mini |
+| News sources | 10 free RSS feeds (no API key required) |
+| Image uploads | Cloudinary |
+| Hosting | Render (web service + cron job + PostgreSQL) |
+
+## Features
+
+- **Personalized feed** — users select interests; feed shows matching topics only
+- **AI Summary** — one-click GPT summary for any topic (browser-only, not stored)
+- **Hide topics** — per-user ✕ removes a topic from their feed permanently
+- **Reactions & comments** — engage directly on topic detail pages
+- **Pulse Thread** — shared community board with text, links, and photo uploads
+- **Auto-polling** — Thread updates live every 12 seconds without page reload
+- **500-post retention** — oldest Thread posts drop automatically when full
+- **Category filter** — filter feed by Economy, Climate, Healthcare, Housing, and more
+
+## Local Development
 
 ```bash
-# 1. Clone the repo
-git clone <repo-url>
+# 1. Clone and install
+git clone https://github.com/nbk5876/pulse.git
 cd pulse
-
-# 2. Create and activate a virtual environment
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Create your .env file
-cp .env.example .env
-# Edit .env with your local PostgreSQL credentials and a secret key
+# 2. Create .env
+SECRET_KEY=your-secret-key
+DATABASE_URL=postgresql://postgres:password@localhost:5432/pulse
+FLASK_ENV=development
+SEED_SECRET=your-admin-secret
+OPENAI_API_KEY=your-openai-key
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 
-# 5. Create the PostgreSQL database
+# 3. Create database and run
 createdb pulse
-
-# 6. Run the app (tables are created automatically on first run)
 python app.py
-
-# 7. Seed interests and sample topics (development only)
-# Visit: http://localhost:5000/admin/seed
 ```
 
-The app will be running at **http://localhost:5000**.
-
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `SECRET_KEY` | Yes | Flask session secret — use a long random string in production |
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `FLASK_ENV` | No | `development` or `production` (default: `development`) |
-
----
-
-## Database
-
-Tables are created automatically via `db.create_all()` on startup. No migration tool is required for the MVP.
-
-To seed the database with interests and sample topics:
-```
-GET /admin/seed
-```
-This route is only available when `FLASK_ENV=development`.
-
----
+Visit `http://localhost:5000` and seed the database at `/admin/seed?secret=<SEED_SECRET>`.
 
 ## Deployment (Render)
 
-1. Push the repo to GitHub
-2. Create a new **Web Service** on [Render](https://render.com)
-3. Connect the GitHub repo
-4. Set build command: `pip install -r requirements.txt`
-5. Set start command: `gunicorn app:app`
-6. Add environment variables: `SECRET_KEY`, `DATABASE_URL`, `FLASK_ENV=production`
-7. Add a **PostgreSQL** database on Render and copy the connection string to `DATABASE_URL`
+1. Create a **PostgreSQL** database on Render
+2. Create a **Web Service** connected to this repo
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn app:app`
+3. Create a **Cron Job** on a 12-hour schedule (`0 */12 * * *`):
+   ```
+   python -c "from app import app; from services.news_service import fetch_and_store_news; app.app_context().push(); fetch_and_store_news()"
+   ```
+4. Set environment variables on both the web service and cron job (see below)
 
-Add `gunicorn` to `requirements.txt` before deploying.
+## Environment Variables
 
----
+| Variable | Purpose |
+|----------|---------|
+| `SECRET_KEY` | Flask session signing |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SEED_SECRET` | Protects admin endpoints |
+| `OPENAI_API_KEY` | GPT news filtering + AI summaries |
+| `CLOUDINARY_CLOUD_NAME` | Thread photo uploads |
+| `CLOUDINARY_API_KEY` | Thread photo uploads |
+| `CLOUDINARY_API_SECRET` | Thread photo uploads |
+
+## Admin Endpoints
+
+All require `?secret=<SEED_SECRET>`:
+
+| URL | Purpose |
+|-----|---------|
+| `/admin/seed` | Seed interests and sample topics |
+| `/admin/fetch-news` | Manually trigger a news fetch |
+| `/admin/topics` | Review and delete topics |
 
 ## Folder Structure
 
 ```
 pulse/
-  app.py               # Application entry point
-  config.py            # DevelopmentConfig / ProductionConfig
-  utils.py             # CSRF helpers, login_required decorator
+  app.py                  # App factory, admin routes
+  config.py               # Dev/prod config
+  utils.py                # CSRF, login_required, linkify
   requirements.txt
-  .env.example
-  models/              # SQLAlchemy models
-    user.py            # User, Interest, user_interests table
-    topic.py           # Topic, TopicSource
-    reaction.py        # TopicReaction
-    civic_unit.py      # CivicUnit (placeholder)
-  routes/              # Flask blueprints
-    auth.py            # /, /register, /login, /logout
-    topics.py          # /feed, /topic/<id>, /topic/<id>/react
-    profile.py         # /profile, /profile/edit, /interests
-    civic_units.py     # /civic-units
+  models/
+    user.py               # User, Interest, user_interests
+    topic.py              # Topic, TopicSource, UserHiddenTopic
+    reaction.py           # TopicReaction
+    comment.py            # Comment
+    thread.py             # ThreadPost
+  routes/
+    auth.py               # Register, login, logout
+    topics.py             # Feed, topic detail, react, comment, hide, summarize
+    profile.py            # Profile, edit profile, interests
+    thread.py             # Pulse Thread, poll, image upload
   services/
-    topic_service.py   # Seed data helpers
-  templates/           # Jinja2 HTML templates
+    news_service.py       # RSS fetch + GPT classification pipeline
+  templates/
   static/
     css/main.css
     js/main.js
+    img/
 ```
