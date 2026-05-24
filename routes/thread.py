@@ -15,6 +15,13 @@ def thread():
             body = request.form.get('body', '').strip()
             if body:
                 db.session.add(ThreadPost(user_id=session['user_id'], body=body))
+                db.session.flush()
+                # Keep only the newest 500 posts
+                cutoff = db.session.query(ThreadPost.id).order_by(
+                    ThreadPost.created_at.desc()
+                ).offset(500).limit(1).scalar()
+                if cutoff:
+                    ThreadPost.query.filter(ThreadPost.id <= cutoff).delete()
                 db.session.commit()
         return redirect(url_for('thread.thread'))
 
