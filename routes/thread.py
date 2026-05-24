@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from models import db
 from models.thread import ThreadPost
 from models.user import User
@@ -28,3 +28,17 @@ def thread():
     posts = ThreadPost.query.order_by(ThreadPost.created_at.desc()).limit(100).all()
     user = User.query.get(session['user_id'])
     return render_template('thread.html', posts=posts, user=user)
+
+
+@thread_bp.route('/thread/poll')
+@login_required
+def thread_poll():
+    since_id = request.args.get('since', 0, type=int)
+    posts = ThreadPost.query.filter(ThreadPost.id > since_id)\
+        .order_by(ThreadPost.created_at.asc()).all()
+    return jsonify([{
+        'id': p.id,
+        'username': p.user.username,
+        'body': p.body,
+        'created_at': p.created_at.strftime('%b %d %I:%M %p'),
+    } for p in posts])

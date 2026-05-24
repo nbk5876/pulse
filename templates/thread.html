@@ -20,7 +20,8 @@
     </div>
   </form>
 
-  <div class="thread-list">
+  <div class="thread-list" id="threadList"
+       data-latest-id="{{ posts[0].id if posts else 0 }}">
     {% for post in posts %}
       <div class="thread-post">
         <div class="thread-post-meta">
@@ -30,7 +31,7 @@
         <p class="thread-body">{{ post.body }}</p>
       </div>
     {% else %}
-      <p class="empty-state-text">No posts yet. Be the first to post.</p>
+      <p class="empty-state-text" id="emptyMsg">No posts yet. Be the first to post.</p>
     {% endfor %}
   </div>
 
@@ -45,5 +46,35 @@ function copyTopicUrl(btn) {
     setTimeout(() => btn.textContent = 'Share', 2000);
   });
 }
+
+const threadList = document.getElementById('threadList');
+let latestId = parseInt(threadList.dataset.latestId) || 0;
+
+function buildPost(p) {
+  const div = document.createElement('div');
+  div.className = 'thread-post thread-post-new';
+  div.innerHTML = `<div class="thread-post-meta">
+    <strong class="thread-author">${p.username}</strong>
+    <span class="thread-date">${p.created_at}</span>
+  </div><p class="thread-body">${p.body}</p>`;
+  return div;
+}
+
+async function pollThread() {
+  try {
+    const resp = await fetch('/thread/poll?since=' + latestId);
+    const posts = await resp.json();
+    if (posts.length > 0) {
+      const empty = document.getElementById('emptyMsg');
+      if (empty) empty.remove();
+      posts.forEach(p => {
+        threadList.insertBefore(buildPost(p), threadList.firstChild);
+        latestId = Math.max(latestId, p.id);
+      });
+    }
+  } catch (e) {}
+}
+
+setInterval(pollThread, 12000);
 </script>
 {% endblock %}
