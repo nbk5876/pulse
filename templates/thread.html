@@ -16,7 +16,11 @@
     <textarea name="body" class="thread-input" rows="3"
               placeholder="What's on your mind?" required maxlength="1000"></textarea>
     <div class="thread-form-footer">
-      <span class="thread-char-hint">Max 1000 characters</span>
+      <div class="thread-footer-left">
+        <button type="button" id="photoBtn" class="btn-photo" onclick="document.getElementById('photoInput').click()">📷 Photo</button>
+        <input type="file" id="photoInput" accept="image/*" style="display:none">
+        <span class="thread-char-hint">Max 1000 characters</span>
+      </div>
       <button type="submit" class="btn btn-primary">Post</button>
     </div>
   </form>
@@ -56,11 +60,40 @@ function linkify(text) {
   // [label](url) markdown links
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  // bare URLs (skip those already inside href attributes)
-  s = s.replace(/(?<!href=")(https?:\/\/[^\s<>"']+)/g,
+  // image URLs (Cloudinary or common image extensions) → <img>
+  s = s.replace(/(?<!href=")(https?:\/\/(?:res\.cloudinary\.com\/[^\s<>"']+|[^\s<>"']+\.(?:jpg|jpeg|png|gif|webp))(?:\?[^\s<>"']*)?)/gi,
+    '<img src="$1" class="thread-img" alt="image">');
+  // remaining bare URLs (skip those already inside href/src attributes)
+  s = s.replace(/(?<!href=")(?<!src=")(https?:\/\/[^\s<>"']+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   return s;
 }
+
+const photoInput = document.getElementById('photoInput');
+const photoBtn = document.getElementById('photoBtn');
+photoInput.addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  photoBtn.textContent = 'Uploading…';
+  photoBtn.disabled = true;
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const resp = await fetch('/thread/upload-image', { method: 'POST', body: fd });
+    const data = await resp.json();
+    if (data.url) {
+      const ta = document.querySelector('.thread-input');
+      ta.value += (ta.value ? '\n' : '') + data.url;
+    } else {
+      alert('Upload failed: ' + (data.error || 'unknown error'));
+    }
+  } catch(e) {
+    alert('Upload failed. Please try again.');
+  }
+  photoBtn.textContent = '📷 Photo';
+  photoBtn.disabled = false;
+  photoInput.value = '';
+});
 
 function buildPost(p) {
   const div = document.createElement('div');

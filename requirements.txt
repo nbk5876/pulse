@@ -6,3 +6,4 @@ Werkzeug
 gunicorn
 requests
 openai
+cloudinary

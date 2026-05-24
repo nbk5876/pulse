@@ -1,3 +1,6 @@
+import os
+import cloudinary
+import cloudinary.uploader
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from models import db
 from models.thread import ThreadPost
@@ -5,6 +8,13 @@ from models.user import User
 from utils import login_required, validate_csrf
 
 thread_bp = Blueprint('thread', __name__)
+
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True,
+)
 
 
 @thread_bp.route('/thread', methods=['GET', 'POST'])
@@ -29,6 +39,25 @@ def thread():
     post_count = ThreadPost.query.count()
     user = User.query.get(session['user_id'])
     return render_template('thread.html', posts=posts, user=user, post_count=post_count)
+
+
+@thread_bp.route('/thread/upload-image', methods=['POST'])
+@login_required
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    file = request.files['image']
+    if not file.filename:
+        return jsonify({'error': 'No file selected'}), 400
+    try:
+        result = cloudinary.uploader.upload(
+            file,
+            folder='pulse_thread',
+            transformation=[{'width': 1200, 'crop': 'limit'}],
+        )
+        return jsonify({'url': result['secure_url']})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @thread_bp.route('/thread/poll')

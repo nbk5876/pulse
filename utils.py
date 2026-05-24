@@ -16,16 +16,22 @@ def validate_csrf(token):
 
 
 _MARKDOWN_LINK_RE = re.compile(r'\[([^\]]+)\]\((https?://[^\)]+)\)')
-_URL_RE = re.compile(r'(?<!href=")(https?://[^\s<>"\']+)')
+_IMAGE_URL_RE = re.compile(
+    r'(?<!href=")(https?://(?:res\.cloudinary\.com/[^\s<>"\']+|[^\s<>"\']+\.(?:jpg|jpeg|png|gif|webp))(?:\?[^\s<>"\']*)?)',
+    re.IGNORECASE,
+)
+_URL_RE = re.compile(r'(?<!href=")(?<!src=")(https?://[^\s<>"\']+)')
 
 def linkify(text):
     escaped = str(escape(text))
-    # First convert [label](url) markdown links
     escaped = _MARKDOWN_LINK_RE.sub(
         lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
         escaped
     )
-    # Then auto-link any remaining bare URLs
+    escaped = _IMAGE_URL_RE.sub(
+        lambda m: f'<img src="{m.group(1)}" class="thread-img" alt="image">',
+        escaped
+    )
     escaped = _URL_RE.sub(
         lambda m: f'<a href="{m.group(1)}" target="_blank" rel="noopener noreferrer">{m.group(1)}</a>',
         escaped
