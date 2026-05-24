@@ -194,6 +194,17 @@ img { max-width: 100%; }
   margin-bottom: 24px;
 }
 .back-link:hover { color: var(--teal); text-decoration: none; }
+.topic-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.share-btn {
+  font-size: 0.82rem;
+  padding: 5px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.share-btn:hover { background: #f0f2f5; color: var(--navy); }
 .section-title {
   font-family: Georgia, serif;
   font-size: 1.1rem;
