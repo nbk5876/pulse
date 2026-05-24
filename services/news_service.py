@@ -23,7 +23,7 @@ MIN_DESCRIPTION_LENGTH = 80
 def fetch_news_for_category(category, api_key, page_size=5):
     query = CATEGORY_QUERIES.get(category)
     if not query:
-        return []
+        return [], None
 
     url = 'https://newsapi.org/v2/top-headlines'
     params = {
@@ -34,9 +34,10 @@ def fetch_news_for_category(category, api_key, page_size=5):
     }
     resp = requests.get(url, params=params, timeout=10)
     if resp.status_code != 200:
-        print(f'NewsAPI error {resp.status_code}: {resp.text}')
-        return []
-    return resp.json().get('articles', [])
+        error_msg = f'HTTP {resp.status_code}: {resp.json().get("message", resp.text)}'
+        print(f'NewsAPI error for {category}: {error_msg}')
+        return [], error_msg
+    return resp.json().get('articles', []), None
 
 
 def fetch_and_store_news():
@@ -46,9 +47,13 @@ def fetch_and_store_news():
 
     added = 0
     skipped = 0
+    errors = []
 
     for category in CATEGORY_QUERIES:
-        articles = fetch_news_for_category(category, api_key)
+        articles, error = fetch_news_for_category(category, api_key)
+        if error:
+            errors.append(f'{category}: {error}')
+            continue
         for article in articles:
             title = (article.get('title') or '').strip()
             url = article.get('url', '')
@@ -87,4 +92,7 @@ def fetch_and_store_news():
 
     db.session.commit()
     print(f'Done: {added} added, {skipped} skipped.')
-    return {'added': added, 'skipped': skipped}
+    result = {'added': added, 'skipped': skipped}
+    if errors:
+        result['errors'] = errors
+    return result
