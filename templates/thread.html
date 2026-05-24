@@ -4,7 +4,10 @@
 {% block content %}
 <div class="page-container page-container-narrow">
 
-  <h1 class="page-title">Pulse Thread</h1>
+  <div class="topic-detail-header">
+    <h1 class="page-title">Pulse Thread</h1>
+    <button class="share-btn" onclick="copyTopicUrl(this)">Share</button>
+  </div>
   <p class="thread-subtitle">A shared space for the community. Post a thought, share a link, ask a question.</p>
 
   <form method="POST" action="/thread" class="thread-form">
@@ -32,4 +35,15 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyTopicUrl(btn) {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Share', 2000);
+  });
+}
+</script>
 {% endblock %}
