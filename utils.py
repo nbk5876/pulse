@@ -16,7 +16,7 @@ def validate_csrf(token):
 
 
 _MARKDOWN_LINK_RE = re.compile(r'\[([^\]]+)\]\((https?://[^\)]+)\)')
-_URL_RE = re.compile(r'(https?://[^\s<>"\']+)')
+_URL_RE = re.compile(r'(?<!href=")(https?://[^\s<>"\']+)')
 
 def linkify(text):
     escaped = str(escape(text))
