@@ -21,6 +21,9 @@
           <a href="/interests" class="nav-link">Interests</a>
           <a href="/civic-units" class="nav-link">Civic Units</a>
           <a href="/profile" class="nav-link">Profile</a>
+          {% if current_user %}
+            <span class="nav-user">{{ current_user.username }} · {{ current_user.email }}</span>
+          {% endif %}
           <a href="/logout" class="nav-link nav-link-logout">Log Out</a>
         {% else %}
           <a href="/login" class="nav-link">Log In</a>

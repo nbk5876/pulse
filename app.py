@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, url_for, jsonify
+from flask import Flask, redirect, url_for, jsonify, session
 from dotenv import load_dotenv
 from models import db
 from config import config
@@ -57,6 +57,13 @@ def create_app():
     # Make CSRF token available in all templates
     app.jinja_env.globals['csrf_token'] = generate_csrf_token
     app.jinja_env.filters['linkify'] = linkify
+
+    @app.context_processor
+    def inject_current_user():
+        from models.user import User
+        user_id = session.get('user_id')
+        current_user = User.query.get(user_id) if user_id else None
+        return {'current_user': current_user}
 
     # Register blueprints
     from routes.auth import auth_bp
