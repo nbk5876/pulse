@@ -462,7 +462,8 @@ img { max-width: 100%; }
 .topic-reactions { margin-bottom: 40px; }
 
 /* ── Pulse Thread ── */
-.thread-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 4px; margin-bottom: 24px; }
+.thread-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 4px; margin-bottom: 6px; }
+.thread-storage { font-size: 0.75rem; color: #9ca3af; margin-bottom: 24px; }
 .thread-form { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 28px; box-shadow: var(--shadow); }
 .thread-input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 0.9rem; font-family: inherit; resize: vertical; }
 .thread-input:focus { outline: none; border-color: var(--navy); }

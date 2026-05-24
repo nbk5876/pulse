@@ -9,6 +9,7 @@
     <button class="share-btn" onclick="copyTopicUrl(this)">Share</button>
   </div>
   <p class="thread-subtitle">A shared space for the community. Post a thought, share a link, ask a question. Similar to the General Thread on NextDoor. But not connected to any other platform.</p>
+  <p class="thread-storage">{{ post_count }} of 500 posts stored · oldest posts drop automatically when full</p>
 
   <form method="POST" action="/thread" class="thread-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

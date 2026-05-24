@@ -26,8 +26,9 @@ def thread():
         return redirect(url_for('thread.thread'))
 
     posts = ThreadPost.query.order_by(ThreadPost.created_at.desc()).limit(100).all()
+    post_count = ThreadPost.query.count()
     user = User.query.get(session['user_id'])
-    return render_template('thread.html', posts=posts, user=user)
+    return render_template('thread.html', posts=posts, user=user, post_count=post_count)
 
 
 @thread_bp.route('/thread/poll')
