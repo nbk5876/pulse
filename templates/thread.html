@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Pulse Thread{% endblock %}
+
+{% block content %}
+<div class="page-container page-container-narrow">
+
+  <h1 class="page-title">Pulse Thread</h1>
+  <p class="thread-subtitle">A shared space for the community. Post a thought, share a link, ask a question.</p>
+
+  <form method="POST" action="/thread" class="thread-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <textarea name="body" class="thread-input" rows="3"
+              placeholder="What's on your mind?" required maxlength="1000"></textarea>
+    <div class="thread-form-footer">
+      <span class="thread-char-hint">Max 1000 characters</span>
+      <button type="submit" class="btn btn-primary">Post</button>
+    </div>
+  </form>
+
+  <div class="thread-list">
+    {% for post in posts %}
+      <div class="thread-post">
+        <div class="thread-post-meta">
+          <strong class="thread-author">{{ post.user.username }}</strong>
+          <span class="thread-date">{{ post.created_at.strftime('%b %d %I:%M %p') }}</span>
+        </div>
+        <p class="thread-body">{{ post.body }}</p>
+      </div>
+    {% else %}
+      <p class="empty-state-text">No posts yet. Be the first to post.</p>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

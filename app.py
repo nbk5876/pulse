@@ -62,11 +62,13 @@ def create_app():
     from routes.topics import topics_bp
     from routes.profile import profile_bp
     from routes.civic_units import civic_units_bp
+    from routes.thread import thread_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(topics_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(civic_units_bp)
+    app.register_blueprint(thread_bp)
 
     # Admin topics page — list and delete topics
     @app.route('/admin/topics')

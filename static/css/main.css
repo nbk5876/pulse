@@ -460,6 +460,20 @@ img { max-width: 100%; }
 
 .topic-reactions { margin-bottom: 40px; }
 
+/* ── Pulse Thread ── */
+.thread-subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 4px; margin-bottom: 24px; }
+.thread-form { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 28px; box-shadow: var(--shadow); }
+.thread-input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 0.9rem; font-family: inherit; resize: vertical; }
+.thread-input:focus { outline: none; border-color: var(--navy); }
+.thread-form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.thread-char-hint { font-size: 0.75rem; color: #9ca3af; }
+.thread-list { display: flex; flex-direction: column; gap: 12px; }
+.thread-post { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.thread-post-meta { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; }
+.thread-author { font-size: 0.88rem; color: var(--navy); }
+.thread-date { font-size: 0.75rem; color: #9ca3af; }
+.thread-body { font-size: 0.9rem; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+
 /* ── Comments ── */
 .topic-comments { margin-top: 40px; }
 .comment-list { margin: 16px 0 24px; display: flex; flex-direction: column; gap: 16px; }
