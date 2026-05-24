@@ -114,8 +114,12 @@ def create_app():
         seed_secret = os.environ.get('SEED_SECRET')
         if not seed_secret or flask_req.args.get('secret') != seed_secret:
             return 'Not available.', 403
-        from services.news_service import fetch_and_store_news
-        result = fetch_and_store_news()
+        try:
+            from services.news_service import fetch_and_store_news
+            result = fetch_and_store_news()
+        except Exception as e:
+            import traceback
+            result = {'error': str(e), 'traceback': traceback.format_exc()}
         return jsonify(result)
 
     # Seed route — requires SEED_SECRET param
