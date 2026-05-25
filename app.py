@@ -3,7 +3,7 @@ from flask import Flask, redirect, url_for, jsonify, session
 from dotenv import load_dotenv
 from models import db
 from config import config
-from utils import generate_csrf_token, linkify
+from utils import generate_csrf_token, linkify, format_summary
 
 load_dotenv()
 
@@ -65,6 +65,7 @@ def create_app():
     # Make CSRF token available in all templates
     app.jinja_env.globals['csrf_token'] = generate_csrf_token
     app.jinja_env.filters['linkify'] = linkify
+    app.jinja_env.filters['format_summary'] = format_summary
 
     @app.context_processor
     def inject_current_user():

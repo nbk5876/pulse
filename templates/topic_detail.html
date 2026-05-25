@@ -15,7 +15,7 @@
     {% endif %}
     <h1 class="topic-title">{{ topic.title }}</h1>
     <p class="topic-meta">{{ topic.created_at.strftime('%B %d, %Y') }}</p>
-    <div class="topic-summary">{{ topic.summary }}</div>
+    <div class="topic-summary">{{ topic.summary | format_summary }}</div>
     <div class="card-summarize" style="margin-top:16px;">
       <button class="summarize-btn" data-topic-id="{{ topic.id }}" data-csrf="{{ csrf_token() }}">AI Summary</button>
       <div class="summarize-result" id="summary-{{ topic.id }}" style="display:none"></div>

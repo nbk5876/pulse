@@ -52,7 +52,13 @@ Articles:
 
 
 def strip_html(text):
-    return re.sub(r'<[^>]+>', '', text or '').strip()
+    text = text or ''
+    # Convert block-level tags to newlines before stripping
+    text = re.sub(r'<(?:p|br|div|li)[^>]*/?>',  '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(?:p|div|li)>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', '', text)
+    lines = [l.strip() for l in text.split('\n')]
+    return '\n'.join(l for l in lines if l).strip()
 
 
 def fetch_all_feeds():

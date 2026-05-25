@@ -39,6 +39,31 @@ def linkify(text):
     return Markup(escaped)
 
 
+_AXIOS_LABELS = re.compile(
+    r'((?:Why it matters|The big picture|The intrigue|Between the lines|'
+    r"What(?:'s| is) inside|What(?:'s| is) next|Yes, but|Zoom in|Zoom out|"
+    r'State of play|What they(?:\'re| are) saying|What to watch|'
+    r'Driving the news|By the numbers|Of note|The bottom line|'
+    r'How it works|What we know|Catch up quick):)',
+    re.IGNORECASE,
+)
+
+def format_summary(text):
+    if not text:
+        return Markup('')
+    escaped = str(escape(text))
+    # Insert paragraph breaks before Axios-style section labels
+    escaped = _AXIOS_LABELS.sub(r'\n\n\1', escaped)
+    # Split into paragraphs
+    paragraphs = re.split(r'\n{2,}', escaped)
+    parts = []
+    for para in paragraphs:
+        para = para.strip().replace('\n', '<br>')
+        if para:
+            parts.append(f'<p class="summary-para">{para}</p>')
+    return Markup('\n'.join(parts))
+
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
