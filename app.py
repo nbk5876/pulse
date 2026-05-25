@@ -30,7 +30,7 @@ ADMIN_TOPICS_HTML = """
     <tr><th>#</th><th>Category</th><th>Title</th><th>Date</th><th></th></tr>
     {% for t in topics %}
     <tr>
-      <td>{{ t.id }}</td>
+      <td><a href="/topic/{{ t.id }}" target="_blank" style="color:#2563eb;">{{ t.id }}</a></td>
       <td class="cat">{{ t.category }}</td>
       <td>{{ t.title }}</td>
       <td>{{ t.created_at.strftime('%m/%d') }}</td>
