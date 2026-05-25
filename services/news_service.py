@@ -39,6 +39,11 @@ that are relevant to civic or policy topics. For each relevant article include:
 EXCLUDE articles about: sports, entertainment, celebrity gossip, crime (unless policy-related),
 weather (unless climate policy), lifestyle, food, travel, TV shows, movies, music.
 
+Category guidance:
+- Immigration = border policy, deportation, asylum seekers, visa rules — NOT January 6 or Capitol riot
+- National Politics = Congress, elections, January 6, Supreme Court, White House, partisan legislation
+- Foreign Policy = international relations, wars, NATO, sanctions, diplomacy
+
 Return ONLY a raw JSON array — no explanation, no markdown, no code fences.
 Example: [{"index": 0, "category": "Economy"}, {"index": 4, "category": "Healthcare"}]
 

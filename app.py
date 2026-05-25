@@ -31,7 +31,15 @@ ADMIN_TOPICS_HTML = """
     {% for t in topics %}
     <tr>
       <td><a href="/topic/{{ t.id }}" target="_blank" style="color:#2563eb;">{{ t.id }}</a></td>
-      <td class="cat">{{ t.category }}</td>
+      <td class="cat">
+        <form method="POST" action="/admin/topics/{{ t.id }}/category?secret={{ secret }}" style="margin:0">
+          <select name="category" onchange="this.form.submit()" style="font-size:0.75rem;border:1px solid #ccc;border-radius:3px;padding:2px 4px;color:#666;">
+            {% for cat in ['Economy','Immigration','Climate','Healthcare','Housing','Foreign Policy','Education','Technology','Local Government','National Politics'] %}
+              <option value="{{ cat }}" {% if cat == t.category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
       <td>{{ t.title }}</td>
       <td>{{ t.created_at.strftime('%m/%d') }}</td>
       <td>
@@ -105,6 +113,22 @@ def create_app():
         TopicSource.query.filter_by(topic_id=topic_id).delete()
         Topic.query.filter_by(id=topic_id).delete()
         db.session.commit()
+        return redirect(f'/admin/topics?secret={flask_req.args.get("secret")}')
+
+    @app.route('/admin/topics/<int:topic_id>/category', methods=['POST'])
+    def admin_update_category(topic_id):
+        from flask import request as flask_req
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        from models.topic import Topic
+        topic = Topic.query.get_or_404(topic_id)
+        new_cat = flask_req.form.get('category', '').strip()
+        valid = ['Economy','Immigration','Climate','Healthcare','Housing',
+                 'Foreign Policy','Education','Technology','Local Government','National Politics']
+        if new_cat in valid:
+            topic.category = new_cat
+            db.session.commit()
         return redirect(f'/admin/topics?secret={flask_req.args.get("secret")}')
 
     # Fetch news route — requires SEED_SECRET param
