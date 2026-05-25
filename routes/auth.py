@@ -60,6 +60,16 @@ def register():
 
         session['user_id'] = user.id
         session['username'] = user.username
+
+        try:
+            from models.thread import ThreadPost
+            bot_id = user.id
+            body = f'🆕 New member: {username} just joined Pulse. Welcome!'
+            db.session.add(ThreadPost(user_id=bot_id, body=body))
+            db.session.commit()
+        except Exception:
+            pass
+
         flash('Welcome to Pulse! Select your interests to personalize your feed.', 'success')
         return redirect(url_for('profile.interests'))
 
