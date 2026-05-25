@@ -82,10 +82,18 @@ def login():
         user = User.query.filter_by(email=email).first()
         if not user or not check_password_hash(user.password_hash, password):
             flash('Invalid email or password.', 'error')
-            return render_template('login.html', form={'email': email})
+            return render_template('login.html', form={'email': email},
+                                   next=request.form.get('next', ''))
+
+        if request.form.get('remember'):
+            session.permanent = True
 
         session['user_id'] = user.id
         session['username'] = user.username
+
+        next_url = request.form.get('next', '').strip()
+        if next_url and next_url.startswith('/'):
+            return redirect(next_url)
         return redirect(url_for('topics.feed'))
 
     return render_template('login.html', form={})

@@ -20,6 +20,14 @@
                autocomplete="current-password" required>
       </div>
 
+      <input type="hidden" name="next" value="{{ next or request.args.get('next', '') }}">
+
+      <div class="form-group form-remember">
+        <label class="remember-label">
+          <input type="checkbox" name="remember" value="1"> Keep me logged in
+        </label>
+      </div>
+
       <button type="submit" class="btn btn-primary btn-full">Log In</button>
     </form>
 

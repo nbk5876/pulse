@@ -69,6 +69,7 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'warning')
-            return redirect(url_for('auth.login'))
+            from flask import request as _req
+            return redirect(url_for('auth.login', next=_req.path))
         return f(*args, **kwargs)
     return decorated
