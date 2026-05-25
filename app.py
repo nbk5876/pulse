@@ -26,6 +26,12 @@ ADMIN_TOPICS_HTML = """
 </head>
 <body>
   <h1>Topics ({{ topics|length }})</h1>
+  <form method="GET" action="/admin/fetch-topic" style="display:flex;gap:8px;margin-bottom:20px;">
+    <input type="hidden" name="secret" value="{{ secret }}">
+    <input type="text" name="q" placeholder="Search topic — e.g. Pope AI encyclical"
+           style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
+    <button type="submit" style="background:#2563eb;color:white;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:0.9rem;">Fetch Topic</button>
+  </form>
   <table>
     <tr><th>#</th><th>Category</th><th>Title</th><th>Date</th><th></th></tr>
     {% for t in topics %}
@@ -131,6 +137,23 @@ def create_app():
             topic.category = new_cat
             db.session.commit()
         return redirect(f'/admin/topics?secret={flask_req.args.get("secret")}')
+
+    @app.route('/admin/fetch-topic')
+    def admin_fetch_topic():
+        from flask import request as flask_req
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        query = flask_req.args.get('q', '').strip()
+        if not query:
+            return jsonify({'error': 'No query provided — add ?q=your+topic'}), 400
+        try:
+            from services.news_service import fetch_topic
+            result = fetch_topic(query)
+        except Exception as e:
+            import traceback
+            result = {'error': str(e), 'traceback': traceback.format_exc()}
+        return jsonify(result)
 
     # Fetch news route — requires SEED_SECRET param
     @app.route('/admin/fetch-news')
