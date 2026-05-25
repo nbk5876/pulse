@@ -47,7 +47,6 @@ def feed():
 
 
 @topics_bp.route('/topic/<int:id>')
-@login_required
 def topic_detail(id):
     topic = Topic.query.get_or_404(id)
     sources = TopicSource.query.filter_by(topic_id=id).all()
@@ -55,16 +54,19 @@ def topic_detail(id):
     reaction_counts = {rt: TopicReaction.query.filter_by(topic_id=id, reaction_type=rt).count()
                        for rt in REACTION_TYPES}
 
+    user_id = session.get('user_id')
     user_reaction = None
-    ur = TopicReaction.query.filter_by(user_id=session['user_id'], topic_id=id).first()
-    if ur:
-        user_reaction = ur.reaction_type
+    if user_id:
+        ur = TopicReaction.query.filter_by(user_id=user_id, topic_id=id).first()
+        if ur:
+            user_reaction = ur.reaction_type
 
     comments = Comment.query.filter_by(topic_id=id).order_by(Comment.created_at.asc()).all()
 
     return render_template('topic_detail.html', topic=topic, sources=sources,
                            reaction_counts=reaction_counts, user_reaction=user_reaction,
-                           reaction_types=REACTION_TYPES, comments=comments)
+                           reaction_types=REACTION_TYPES, comments=comments,
+                           logged_in=bool(user_id))
 
 
 @topics_bp.route('/topic/<int:id>/react', methods=['POST'])
@@ -96,9 +98,17 @@ def react(id):
 @topics_bp.route('/topic/<int:id>/comment', methods=['POST'])
 @login_required
 def add_comment(id):
+    if not validate_csrf(request.form.get('csrf_token')):
+        return redirect(url_for('topics.topic_detail', id=id))
     body = request.form.get('body', '').strip()
     if body:
         db.session.add(Comment(user_id=session['user_id'], topic_id=id, body=body))
+        if request.form.get('share_to_thread'):
+            from models.thread import ThreadPost
+            topic = Topic.query.get(id)
+            thread_body = (f'Re: "{topic.title}"\n\n{body}\n\n'
+                           f'https://pulse.core3.com/topic/{id}')
+            db.session.add(ThreadPost(user_id=session['user_id'], body=thread_body))
         db.session.commit()
     return redirect(url_for('topics.topic_detail', id=id))
 

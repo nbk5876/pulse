@@ -6,7 +6,10 @@
 
   <div class="topic-detail-header">
     <a href="/feed" class="back-link">← Back to Feed</a>
-    <button class="share-btn" onclick="copyTopicUrl(this)">Share</button>
+    <div class="topic-header-actions">
+      <button class="btn-copy-share" onclick="copyForSharing(this)">Copy Summary + Link</button>
+      <button class="share-btn" onclick="copyTopicUrl(this)">Copy Link</button>
+    </div>
   </div>
 
   <article class="topic-article">
@@ -16,10 +19,12 @@
     <h1 class="topic-title">{{ topic.title }}</h1>
     <p class="topic-meta">{{ topic.created_at.strftime('%B %d, %Y') }}</p>
     <div class="topic-summary">{{ topic.summary | format_summary }}</div>
+    {% if logged_in %}
     <div class="card-summarize" style="margin-top:16px;">
       <button class="summarize-btn" data-topic-id="{{ topic.id }}" data-csrf="{{ csrf_token() }}">AI Summary</button>
       <div class="summarize-result" id="summary-{{ topic.id }}" style="display:none"></div>
     </div>
+    {% endif %}
   </article>
 
   {% if sources %}
@@ -33,6 +38,7 @@
   </section>
   {% endif %}
 
+  {% if logged_in %}
   <section class="topic-reactions">
     <h2 class="section-title">Reactions</h2>
     <form method="POST" action="/topic/{{ topic.id }}/react">
@@ -51,7 +57,6 @@
       {% endif %}
     </form>
   </section>
-
 
   <section class="topic-comments">
     <h2 class="section-title">Comments ({{ comments|length }})</h2>
@@ -73,9 +78,55 @@
     <form method="POST" action="/topic/{{ topic.id }}/comment" class="comment-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <textarea name="body" class="comment-input" rows="3" placeholder="Share your thoughts…" required></textarea>
-      <button type="submit" class="btn btn-primary">Post Comment</button>
+      <div class="comment-form-footer">
+        <label class="share-to-thread-label">
+          <input type="checkbox" name="share_to_thread" value="1">
+          Also post to Pulse Thread
+        </label>
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+      </div>
     </form>
   </section>
+
+  {% else %}
+  <section class="topic-reactions">
+    <h2 class="section-title">Reactions</h2>
+    <div class="reaction-buttons reaction-buttons-readonly">
+      {% for rt in reaction_types %}
+        <div class="reaction-btn">
+          <span class="reaction-label">{{ rt }}</span>
+          <span class="reaction-count-badge">{{ reaction_counts[rt] }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if comments %}
+  <section class="topic-comments">
+    <h2 class="section-title">Comments ({{ comments|length }})</h2>
+    <div class="comment-list">
+      {% for comment in comments %}
+        <div class="comment">
+          <div class="comment-meta">
+            <strong class="comment-author">{{ comment.user.username }}</strong>
+            <span class="comment-date">{{ comment.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          <p class="comment-body">{{ comment.body }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="join-pulse-cta">
+    <h2 class="join-pulse-title">Join Pulse to react and comment</h2>
+    <p class="join-pulse-text">Pulse is a free civic news app for your community. Create an account to share reactions, leave comments, and get a personalized news feed.</p>
+    <div class="join-pulse-actions">
+      <a href="/register" class="btn btn-primary">Create Free Account</a>
+      <a href="/login?next=/topic/{{ topic.id }}" class="btn btn-secondary">Log In</a>
+    </div>
+  </div>
+  {% endif %}
 
 </div>
 {% endblock %}
@@ -85,10 +136,22 @@
 function copyTopicUrl(btn) {
   navigator.clipboard.writeText(window.location.href).then(() => {
     btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Share', 2000);
+    setTimeout(() => btn.textContent = 'Copy Link', 2000);
   });
 }
 
+function copyForSharing(btn) {
+  const title = {{ topic.title | tojson }};
+  const summary = {{ topic.summary[:300] | tojson }};
+  const ellipsis = {{ (topic.summary | length) > 300 | tojson }} ? '…' : '';
+  const text = title + '\n\n' + summary + ellipsis + '\n\n' + window.location.href;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Summary + Link', 2000);
+  });
+}
+
+{% if logged_in %}
 document.querySelectorAll('.summarize-btn').forEach(btn => {
   btn.addEventListener('click', async function() {
     const topicId = this.dataset.topicId;
@@ -119,5 +182,6 @@ document.querySelectorAll('.summarize-btn').forEach(btn => {
     this.disabled = false;
   });
 });
+{% endif %}
 </script>
 {% endblock %}
