@@ -60,6 +60,19 @@ def upload_image():
         return jsonify({'error': str(e)}), 500
 
 
+@thread_bp.route('/thread/<int:post_id>/delete', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    if not validate_csrf(request.form.get('csrf_token')):
+        return jsonify({'error': 'Invalid CSRF'}), 403
+    post = ThreadPost.query.get_or_404(post_id)
+    if post.user_id != session['user_id']:
+        return jsonify({'error': 'Forbidden'}), 403
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'deleted': post_id})
+
+
 @thread_bp.route('/thread/poll')
 @login_required
 def thread_poll():

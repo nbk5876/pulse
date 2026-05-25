@@ -28,10 +28,13 @@
   <div class="thread-list" id="threadList"
        data-latest-id="{{ posts[0].id if posts else 0 }}">
     {% for post in posts %}
-      <div class="thread-post">
+      <div class="thread-post" id="post-{{ post.id }}">
         <div class="thread-post-meta">
           <strong class="thread-author">{{ post.user.username }}</strong>
           <span class="thread-date">{{ post.created_at.strftime('%b %d %I:%M %p') }}</span>
+          {% if post.user_id == session['user_id'] %}
+            <button class="thread-delete-btn" onclick="deletePost({{ post.id }}, '{{ csrf_token() }}')">✕ delete</button>
+          {% endif %}
         </div>
         <p class="thread-body">{{ post.body | linkify }}</p>
       </div>
@@ -121,5 +124,18 @@ async function pollThread() {
 }
 
 setInterval(pollThread, 12000);
+
+async function deletePost(postId, csrf) {
+  if (!confirm('Delete this post?')) return;
+  const resp = await fetch('/thread/' + postId + '/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'csrf_token=' + encodeURIComponent(csrf),
+  });
+  if (resp.ok) {
+    const el = document.getElementById('post-' + postId);
+    if (el) el.remove();
+  }
+}
 </script>
 {% endblock %}
