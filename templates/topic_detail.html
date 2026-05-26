@@ -69,7 +69,7 @@
               <strong class="comment-author">{{ comment.user.username }}</strong>
               <span class="comment-date">{{ comment.created_at.strftime('%b %d, %Y') }}</span>
             </div>
-            <p class="comment-body">{{ comment.body }}</p>
+            <p class="comment-body">{{ comment.body | linkify }}</p>
           </div>
         {% endfor %}
       </div>
