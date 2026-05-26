@@ -11,6 +11,7 @@
   <p class="thread-subtitle">A shared space for the community. Post a thought, share a link, ask a question. Similar to the General Thread on NextDoor. But not connected to any other platform.</p>
   <p class="thread-storage">{{ post_count }} of 500 posts stored · oldest posts drop automatically when full</p>
 
+  {% if logged_in %}
   <form method="POST" action="/thread" class="thread-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <textarea name="body" class="thread-input" rows="3"
@@ -24,6 +25,16 @@
       <button type="submit" class="btn btn-primary">Post</button>
     </div>
   </form>
+  {% else %}
+  <div class="join-pulse-cta">
+    <h2 class="join-pulse-title">Join Pulse to post to the Thread</h2>
+    <p class="join-pulse-text">Pulse is a free civic news app for your community. Create an account to post messages, share links, and join the conversation.</p>
+    <div class="join-pulse-actions">
+      <a href="/register" class="btn btn-primary">Create Free Account</a>
+      <a href="/login?next=/thread" class="btn btn-secondary">Log In</a>
+    </div>
+  </div>
+  {% endif %}
 
   <div class="thread-list" id="threadList"
        data-latest-id="{{ posts[0].id if posts else 0 }}">
@@ -33,7 +44,7 @@
           <strong class="thread-author">{{ post.user.username }}</strong>
           <span class="thread-date">{{ post.created_at.strftime('%b %d %I:%M %p') }}</span>
           <button class="thread-link-btn" onclick="copyPostLink({{ post.id }}, this)">link</button>
-          {% if post.user_id == session['user_id'] %}
+          {% if logged_in and post.user_id == session.get('user_id') %}
             <button class="thread-delete-btn" onclick="deletePost({{ post.id }}, '{{ csrf_token() }}')">✕ delete</button>
           {% endif %}
         </div>

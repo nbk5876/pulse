@@ -18,13 +18,16 @@ cloudinary.config(
 
 
 @thread_bp.route('/thread', methods=['GET', 'POST'])
-@login_required
 def thread():
+    user_id = session.get('user_id')
+
     if request.method == 'POST':
+        if not user_id:
+            return redirect(url_for('auth.login', next='/thread'))
         if validate_csrf(request.form.get('csrf_token')):
             body = request.form.get('body', '').strip()
             if body:
-                db.session.add(ThreadPost(user_id=session['user_id'], body=body))
+                db.session.add(ThreadPost(user_id=user_id, body=body))
                 db.session.flush()
                 # Keep only the newest 500 posts
                 cutoff = db.session.query(ThreadPost.id).order_by(
@@ -37,8 +40,8 @@ def thread():
 
     posts = ThreadPost.query.order_by(ThreadPost.created_at.desc()).limit(100).all()
     post_count = ThreadPost.query.count()
-    user = User.query.get(session['user_id'])
-    return render_template('thread.html', posts=posts, user=user, post_count=post_count)
+    return render_template('thread.html', posts=posts, post_count=post_count,
+                           logged_in=bool(user_id))
 
 
 @thread_bp.route('/thread/upload-image', methods=['POST'])
@@ -74,7 +77,6 @@ def delete_post(post_id):
 
 
 @thread_bp.route('/thread/poll')
-@login_required
 def thread_poll():
     since_id = request.args.get('since', 0, type=int)
     posts = ThreadPost.query.filter(ThreadPost.id > since_id)\
