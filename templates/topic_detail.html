@@ -143,7 +143,7 @@ function copyTopicUrl(btn) {
 function copyForSharing(btn) {
   const title = {{ topic.title | tojson }};
   const summary = {{ (topic.summary or '')[:300] | tojson }};
-  const ellipsis = {{ ((topic.summary or '') | length) > 300 | tojson }} ? '…' : '';
+  const ellipsis = {{ (((topic.summary or '') | length) > 300) | tojson }} ? '…' : '';
   const text = title + '\n\n' + summary + ellipsis + '\n\n' + window.location.href;
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = 'Copied!';
