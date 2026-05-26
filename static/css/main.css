@@ -327,6 +327,9 @@ img { max-width: 100%; }
 }
 .filter-btn:hover { background: var(--navy); color: #fff; text-decoration: none; border-color: var(--navy); }
 .filter-btn-active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.filter-btn-interest { border-color: var(--navy); font-weight: 700; }
+.filter-btn-interest::after { content: ' ●'; font-size: 0.45rem; vertical-align: super; color: #2563eb; }
+.filter-btn-active.filter-btn-interest::after { color: #fff; }
 
 .topic-grid {
   display: grid;

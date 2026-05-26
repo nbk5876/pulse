@@ -7,10 +7,11 @@
   <div class="feed-header">
     <h1 class="page-title">Your Feed</h1>
     {% if categories %}
+    {% set interest_names = user.interests | map(attribute='name') | list %}
     <div class="category-filters">
       <a href="/feed" class="filter-btn {% if not selected_category %}filter-btn-active{% endif %}">All</a>
       {% for cat in categories %}
-        <a href="/feed?category={{ cat }}" class="filter-btn {% if selected_category == cat %}filter-btn-active{% endif %}">{{ cat }}</a>
+        <a href="/feed?category={{ cat }}" class="filter-btn {% if selected_category == cat %}filter-btn-active{% endif %} {% if cat in interest_names %}filter-btn-interest{% endif %}">{{ cat }}</a>
       {% endfor %}
     </div>
     {% endif %}
