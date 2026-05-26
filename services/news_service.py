@@ -195,16 +195,22 @@ def fetch_topic(query):
 
     for idx, category in classifications.items():
         article = candidates[idx]
-        topic = Topic(title=article['title'], summary=article['description'], category=category)
-        db.session.add(topic)
-        db.session.flush()
-        db.session.add(TopicSource(
-            topic_id=topic.id,
-            source_name=article['source'],
-            source_url=article['url'],
-        ))
-        print(f'[+] Added ({category}): {article["title"]}')
-        added += 1
+        try:
+            topic = Topic(title=article['title'], summary=article['description'], category=category)
+            db.session.add(topic)
+            db.session.flush()
+            db.session.add(TopicSource(
+                topic_id=topic.id,
+                source_name=article['source'],
+                source_url=article['url'],
+            ))
+            db.session.flush()
+            print(f'[+] Added ({category}): {article["title"]}')
+            added += 1
+        except Exception as e:
+            db.session.rollback()
+            print(f'[!] Skipped (DB error): {article["title"]} — {e}')
+            skipped += 1
 
     db.session.commit()
     print(f'Ad-hoc done: {added} added, {skipped} skipped, {date_filtered} too old.')

@@ -31,4 +31,4 @@ class TopicSource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'), nullable=False)
     source_name = db.Column(db.String(200))
-    source_url = db.Column(db.String(500))
+    source_url = db.Column(db.Text)
