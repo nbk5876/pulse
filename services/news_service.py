@@ -119,10 +119,13 @@ def categorize_articles(articles):
     response = client.chat.completions.create(
         model='gpt-4o-mini',
         messages=[{'role': 'user', 'content': CATEGORIZE_PROMPT + json.dumps(batch)}],
-        max_tokens=1000,
+        max_tokens=4000,
         temperature=0,
     )
     raw = response.choices[0].message.content.strip()
+    if raw.startswith('```'):
+        raw = re.sub(r'^```(?:json)?\s*', '', raw)
+        raw = re.sub(r'\s*```$', '', raw.strip())
     parsed = json.loads(raw)
     valid = ['Economy','Immigration','Climate','Healthcare','Housing',
              'Foreign Policy','Education','Technology','Local Government','National Politics']
@@ -212,11 +215,14 @@ def classify_articles(articles):
     response = client.chat.completions.create(
         model='gpt-4o-mini',
         messages=[{'role': 'user', 'content': CLASSIFY_PROMPT + json.dumps(batch)}],
-        max_tokens=1500,
+        max_tokens=4000,
         temperature=0,
     )
 
     raw = response.choices[0].message.content.strip()
+    if raw.startswith('```'):
+        raw = re.sub(r'^```(?:json)?\s*', '', raw)
+        raw = re.sub(r'\s*```$', '', raw.strip())
     parsed = json.loads(raw)
     return {item['index']: item['category'] for item in parsed
             if item.get('category') in VALID_CATEGORIES}
