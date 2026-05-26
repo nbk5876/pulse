@@ -18,7 +18,7 @@
     {% endif %}
     <h1 class="topic-title">{{ topic.title }}</h1>
     <p class="topic-meta">{{ topic.created_at.strftime('%B %d, %Y') }}</p>
-    <div class="topic-summary">{{ topic.summary | format_summary }}</div>
+    <div class="topic-summary">{{ (topic.summary or '') | format_summary }}</div>
     {% if logged_in %}
     <div class="card-summarize" style="margin-top:16px;">
       <button class="summarize-btn" data-topic-id="{{ topic.id }}" data-csrf="{{ csrf_token() }}">AI Summary</button>
@@ -142,8 +142,8 @@ function copyTopicUrl(btn) {
 
 function copyForSharing(btn) {
   const title = {{ topic.title | tojson }};
-  const summary = {{ topic.summary[:300] | tojson }};
-  const ellipsis = {{ (topic.summary | length) > 300 | tojson }} ? '…' : '';
+  const summary = {{ (topic.summary or '')[:300] | tojson }};
+  const ellipsis = {{ ((topic.summary or '') | length) > 300 | tojson }} ? '…' : '';
   const text = title + '\n\n' + summary + ellipsis + '\n\n' + window.location.href;
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = 'Copied!';
