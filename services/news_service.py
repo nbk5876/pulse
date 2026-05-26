@@ -3,6 +3,7 @@ import json
 import re
 import urllib.parse
 import feedparser
+from datetime import datetime, timezone, timedelta
 from models import db
 from models.topic import Topic, TopicSource
 
@@ -147,8 +148,17 @@ def fetch_topic(query):
     except Exception as e:
         return {'error': f'RSS fetch error: {e}', 'added': 0, 'skipped': 0}
 
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     articles = []
+    date_filtered = 0
     for entry in feed.entries:
+        published_parsed = entry.get('published_parsed')
+        if published_parsed:
+            pub_dt = datetime(*published_parsed[:6], tzinfo=timezone.utc)
+            if pub_dt < cutoff:
+                date_filtered += 1
+                continue
+
         title = strip_html(entry.get('title', ''))
         description = strip_html(entry.get('summary', '') or entry.get('description', ''))
         link = entry.get('link', '')
@@ -170,14 +180,14 @@ def fetch_topic(query):
     ]
 
     if not candidates:
-        return {'added': 0, 'skipped': len(articles), 'query': query}
+        return {'added': 0, 'skipped': len(articles), 'date_filtered': date_filtered, 'query': query}
 
-    print(f'Ad-hoc fetch "{query}": {len(candidates)} candidates → GPT')
+    print(f'Ad-hoc fetch "{query}": {len(candidates)} candidates → GPT ({date_filtered} older than 24h excluded)')
 
     try:
         classifications = categorize_articles(candidates)
     except Exception as e:
-        return {'added': 0, 'skipped': len(candidates),
+        return {'added': 0, 'skipped': len(candidates), 'date_filtered': date_filtered,
                 'errors': [f'GPT error: {str(e)}'], 'query': query}
 
     added = 0
@@ -197,8 +207,8 @@ def fetch_topic(query):
         added += 1
 
     db.session.commit()
-    print(f'Ad-hoc done: {added} added, {skipped} skipped.')
-    return {'added': added, 'skipped': skipped, 'query': query}
+    print(f'Ad-hoc done: {added} added, {skipped} skipped, {date_filtered} too old.')
+    return {'added': added, 'skipped': skipped, 'date_filtered': date_filtered, 'query': query}
 
 
 def classify_articles(articles):
