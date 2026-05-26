@@ -32,6 +32,7 @@
         <div class="thread-post-meta">
           <strong class="thread-author">{{ post.user.username }}</strong>
           <span class="thread-date">{{ post.created_at.strftime('%b %d %I:%M %p') }}</span>
+          <button class="thread-link-btn" onclick="copyPostLink({{ post.id }}, this)">link</button>
           {% if post.user_id == session['user_id'] %}
             <button class="thread-delete-btn" onclick="deletePost({{ post.id }}, '{{ csrf_token() }}')">✕ delete</button>
           {% endif %}
@@ -124,6 +125,14 @@ async function pollThread() {
 }
 
 setInterval(pollThread, 12000);
+
+function copyPostLink(postId, btn) {
+  const url = window.location.origin + '/thread#post-' + postId;
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'copied!';
+    setTimeout(() => btn.textContent = 'link', 2000);
+  });
+}
 
 async function deletePost(postId, csrf) {
   if (!confirm('Delete this post?')) return;

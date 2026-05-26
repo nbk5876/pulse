@@ -491,6 +491,8 @@ img { max-width: 100%; }
 .thread-post-new { animation: fadeIn 0.4s ease; }
 .thread-delete-btn { margin-left: auto; background: none; border: none; color: #9ca3af; font-size: 0.75rem; cursor: pointer; padding: 0; }
 .thread-delete-btn:hover { color: #c0392b; }
+.thread-link-btn { background: none; border: none; color: #9ca3af; font-size: 0.75rem; cursor: pointer; padding: 0; }
+.thread-link-btn:hover { color: #2563eb; }
 .thread-footer-left { display: flex; gap: 10px; align-items: center; }
 .btn-photo { background: none; border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 10px; font-size: 0.82rem; cursor: pointer; color: var(--text); transition: background 0.15s; }
 .btn-photo:hover { background: var(--bg); }
