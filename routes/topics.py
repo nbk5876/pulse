@@ -48,25 +48,31 @@ def feed():
 
 @topics_bp.route('/topic/<int:id>')
 def topic_detail(id):
-    topic = Topic.query.get_or_404(id)
-    sources = TopicSource.query.filter_by(topic_id=id).all()
+    import traceback
+    try:
+        topic = Topic.query.get_or_404(id)
+        sources = TopicSource.query.filter_by(topic_id=id).all()
 
-    reaction_counts = {rt: TopicReaction.query.filter_by(topic_id=id, reaction_type=rt).count()
-                       for rt in REACTION_TYPES}
+        reaction_counts = {rt: TopicReaction.query.filter_by(topic_id=id, reaction_type=rt).count()
+                           for rt in REACTION_TYPES}
 
-    user_id = session.get('user_id')
-    user_reaction = None
-    if user_id:
-        ur = TopicReaction.query.filter_by(user_id=user_id, topic_id=id).first()
-        if ur:
-            user_reaction = ur.reaction_type
+        user_id = session.get('user_id')
+        user_reaction = None
+        if user_id:
+            ur = TopicReaction.query.filter_by(user_id=user_id, topic_id=id).first()
+            if ur:
+                user_reaction = ur.reaction_type
 
-    comments = Comment.query.filter_by(topic_id=id).order_by(Comment.created_at.asc()).all()
+        comments = Comment.query.filter_by(topic_id=id).order_by(Comment.created_at.asc()).all()
 
-    return render_template('topic_detail.html', topic=topic, sources=sources,
-                           reaction_counts=reaction_counts, user_reaction=user_reaction,
-                           reaction_types=REACTION_TYPES, comments=comments,
-                           logged_in=bool(user_id))
+        return render_template('topic_detail.html', topic=topic, sources=sources,
+                               reaction_counts=reaction_counts, user_reaction=user_reaction,
+                               reaction_types=REACTION_TYPES, comments=comments,
+                               logged_in=bool(user_id))
+    except Exception as e:
+        print(f'[topic_detail ERROR] topic_id={id}: {e}')
+        print(traceback.format_exc())
+        raise
 
 
 @topics_bp.route('/topic/<int:id>/react', methods=['POST'])
