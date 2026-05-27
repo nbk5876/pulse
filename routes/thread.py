@@ -2,6 +2,7 @@ import os
 import cloudinary
 import cloudinary.uploader
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from sqlalchemy import func
 from models import db
 from models.thread import ThreadPost
 from models.user import User
@@ -42,8 +43,9 @@ def thread():
     posts = ThreadPost.query.filter_by(parent_id=None)\
         .order_by(ThreadPost.created_at.desc()).limit(100).all()
     post_count = ThreadPost.query.count()
+    max_post_id = db.session.query(func.max(ThreadPost.id)).scalar() or 0
     return render_template('thread.html', posts=posts, post_count=post_count,
-                           logged_in=bool(user_id))
+                           logged_in=bool(user_id), max_post_id=max_post_id)
 
 
 @thread_bp.route('/thread/upload-image', methods=['POST'])

@@ -37,7 +37,7 @@
   {% endif %}
 
   <div class="thread-list" id="threadList"
-       data-latest-id="{{ posts[0].id if posts else 0 }}">
+       data-latest-id="{{ max_post_id }}">
     {% for post in posts %}
       <div class="thread-post" id="post-{{ post.id }}">
         <div class="thread-post-meta">
