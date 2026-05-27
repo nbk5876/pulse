@@ -26,8 +26,9 @@ def thread():
             return redirect(url_for('auth.login', next='/thread'))
         if validate_csrf(request.form.get('csrf_token')):
             body = request.form.get('body', '').strip()
+            parent_id = request.form.get('parent_id', type=int)
             if body:
-                db.session.add(ThreadPost(user_id=user_id, body=body))
+                db.session.add(ThreadPost(user_id=user_id, body=body, parent_id=parent_id))
                 db.session.flush()
                 # Keep only the newest 500 posts
                 cutoff = db.session.query(ThreadPost.id).order_by(
@@ -38,7 +39,8 @@ def thread():
                 db.session.commit()
         return redirect(url_for('thread.thread'))
 
-    posts = ThreadPost.query.order_by(ThreadPost.created_at.desc()).limit(100).all()
+    posts = ThreadPost.query.filter_by(parent_id=None)\
+        .order_by(ThreadPost.created_at.desc()).limit(100).all()
     post_count = ThreadPost.query.count()
     return render_template('thread.html', posts=posts, post_count=post_count,
                            logged_in=bool(user_id))
@@ -71,6 +73,8 @@ def delete_post(post_id):
     post = ThreadPost.query.get_or_404(post_id)
     if post.user_id != session['user_id']:
         return jsonify({'error': 'Forbidden'}), 403
+    # Delete replies first
+    ThreadPost.query.filter_by(parent_id=post_id).delete()
     db.session.delete(post)
     db.session.commit()
     return jsonify({'deleted': post_id})
@@ -83,6 +87,7 @@ def thread_poll():
         .order_by(ThreadPost.created_at.asc()).all()
     return jsonify([{
         'id': p.id,
+        'parent_id': p.parent_id,
         'username': p.user.username,
         'body': p.body,
         'created_at': p.created_at.strftime('%b %d %I:%M %p'),
