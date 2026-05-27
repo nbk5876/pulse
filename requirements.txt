@@ -8,3 +8,4 @@ requests
 openai
 cloudinary
 feedparser
+beautifulsoup4

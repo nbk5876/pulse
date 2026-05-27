@@ -26,11 +26,19 @@ ADMIN_TOPICS_HTML = """
 </head>
 <body>
   <h1>Topics ({{ topics|length }})</h1>
-  <form method="GET" action="/admin/fetch-topic" style="display:flex;gap:8px;margin-bottom:20px;">
+  {% if msg %}<div style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;padding:8px 14px;border-radius:5px;margin-bottom:14px;font-size:0.9rem;">{{ msg }}</div>{% endif %}
+  {% if err %}<div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:8px 14px;border-radius:5px;margin-bottom:14px;font-size:0.9rem;">{{ err }}</div>{% endif %}
+  <form method="GET" action="/admin/fetch-topic" style="display:flex;gap:8px;margin-bottom:12px;">
     <input type="hidden" name="secret" value="{{ secret }}">
     <input type="text" name="q" placeholder="Search topic — e.g. Pope AI encyclical"
            style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
     <button type="submit" style="background:#2563eb;color:white;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:0.9rem;">Fetch Topic</button>
+  </form>
+  <form method="POST" action="/admin/submit-url" style="display:flex;gap:8px;margin-bottom:20px;">
+    <input type="hidden" name="secret" value="{{ secret }}">
+    <input type="url" name="url" placeholder="Paste article URL to add directly…"
+           style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;" required>
+    <button type="submit" style="background:#16a34a;color:white;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:0.9rem;">Add Article</button>
   </form>
   <table>
     <tr><th>#</th><th>Category</th><th>Title</th><th>Date</th><th></th></tr>
@@ -103,7 +111,9 @@ def create_app():
         from models.topic import Topic
         topics = Topic.query.order_by(Topic.created_at.desc()).all()
         secret = flask_req.args.get('secret')
-        return render_template_string(ADMIN_TOPICS_HTML, topics=topics, secret=secret)
+        msg = flask_req.args.get('msg', '')
+        err = flask_req.args.get('err', '')
+        return render_template_string(ADMIN_TOPICS_HTML, topics=topics, secret=secret, msg=msg, err=err)
 
     @app.route('/admin/topics/<int:topic_id>/delete', methods=['POST'])
     def admin_delete_topic(topic_id):
@@ -154,6 +164,83 @@ def create_app():
             import traceback
             result = {'error': str(e), 'traceback': traceback.format_exc()}
         return jsonify(result)
+
+    @app.route('/admin/submit-url', methods=['POST'])
+    def admin_submit_url():
+        from flask import request as flask_req
+        import re, json
+        import requests as req_lib
+        from bs4 import BeautifulSoup
+        import openai
+        from urllib.parse import urlparse
+        from models.topic import Topic, TopicSource
+
+        seed_secret = os.environ.get('SEED_SECRET')
+        secret = flask_req.form.get('secret', '')
+        if not seed_secret or secret != seed_secret:
+            return 'Not available.', 403
+
+        url = flask_req.form.get('url', '').strip()
+        if not url:
+            return redirect(f'/admin/topics?secret={secret}&err=No+URL+provided')
+
+        # Fetch the page
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (compatible; PulseBot/1.0)'}
+            page = req_lib.get(url, headers=headers, timeout=12)
+            page.raise_for_status()
+        except Exception as e:
+            return redirect(f'/admin/topics?secret={secret}&err=Could+not+fetch+URL:+{str(e)[:80]}')
+
+        # Extract text
+        soup = BeautifulSoup(page.text, 'html.parser')
+        page_title = soup.title.string.strip() if soup.title else ''
+        paragraphs = [p.get_text(' ', strip=True) for p in soup.find_all('p')
+                      if len(p.get_text(strip=True)) > 50]
+        body_text = ' '.join(paragraphs)[:4000] or soup.get_text(' ', strip=True)[:4000]
+
+        # GPT
+        valid_cats = ['Economy', 'Immigration', 'Climate', 'Healthcare', 'Housing',
+                      'Foreign Policy', 'Education', 'Technology', 'Local Government', 'National Politics']
+        client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+        prompt = (
+            f'You are processing a news article for a civic news app.\n\n'
+            f'Page title: {page_title}\nURL: {url}\n'
+            f'Article text: {body_text}\n\n'
+            f'Return ONLY valid JSON with keys:\n'
+            f'- "title": clear concise headline (max 120 chars)\n'
+            f'- "summary": 2-3 sentence neutral summary\n'
+            f'- "category": exactly one of: {", ".join(valid_cats)}\n'
+            f'JSON only, no markdown.'
+        )
+        try:
+            resp_gpt = client.chat.completions.create(
+                model='gpt-4o-mini',
+                messages=[{'role': 'user', 'content': prompt}],
+                max_tokens=500,
+                temperature=0.3,
+            )
+            raw = resp_gpt.choices[0].message.content.strip()
+            raw = re.sub(r'^```(?:json)?\s*', '', raw)
+            raw = re.sub(r'\s*```$', '', raw)
+            data = json.loads(raw)
+        except Exception as e:
+            return redirect(f'/admin/topics?secret={secret}&err=GPT+error:+{str(e)[:80]}')
+
+        title    = str(data.get('title', page_title))[:255]
+        summary  = str(data.get('summary', ''))
+        category = data.get('category', 'Technology')
+        if category not in valid_cats:
+            category = 'Technology'
+
+        source_name = urlparse(url).netloc.replace('www.', '')
+        topic = Topic(title=title, summary=summary, category=category)
+        db.session.add(topic)
+        db.session.flush()
+        db.session.add(TopicSource(topic_id=topic.id, source_name=source_name, source_url=url))
+        db.session.commit()
+
+        return redirect(f'/admin/topics?secret={secret}&msg=Added:+{topic.id}+—+{title[:60]}')
 
     # Fetch news route — requires SEED_SECRET param
     @app.route('/admin/fetch-news')
