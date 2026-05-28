@@ -242,6 +242,39 @@ def create_app():
 
         return redirect(f'/admin/topics?secret={secret}&msg=Added:+{topic.id}+—+{title[:60]}')
 
+    @app.route('/admin/cleanup-topics')
+    def admin_cleanup_topics():
+        from flask import request as flask_req
+        from datetime import datetime, timezone, timedelta
+        from models.topic import Topic, TopicSource, UserHiddenTopic
+        from models.reaction import TopicReaction
+        from models.comment import Comment
+
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=2)
+
+        has_reaction = {r[0] for r in db.session.query(TopicReaction.topic_id).distinct()}
+        has_comment  = {r[0] for r in db.session.query(Comment.topic_id).distinct()}
+        engaged_ids  = has_reaction | has_comment
+
+        old_topics = Topic.query.filter(Topic.created_at < cutoff).all()
+        delete_ids = [t.id for t in old_topics if t.id not in engaged_ids]
+
+        if not delete_ids:
+            return jsonify({'deleted': 0, 'message': 'Nothing to clean up.'})
+
+        Comment.query.filter(Comment.topic_id.in_(delete_ids)).delete(synchronize_session=False)
+        TopicReaction.query.filter(TopicReaction.topic_id.in_(delete_ids)).delete(synchronize_session=False)
+        UserHiddenTopic.query.filter(UserHiddenTopic.topic_id.in_(delete_ids)).delete(synchronize_session=False)
+        TopicSource.query.filter(TopicSource.topic_id.in_(delete_ids)).delete(synchronize_session=False)
+        Topic.query.filter(Topic.id.in_(delete_ids)).delete(synchronize_session=False)
+        db.session.commit()
+
+        return jsonify({'deleted': len(delete_ids), 'message': f'Removed {len(delete_ids)} old unengaged topics.'})
+
     # Fetch news route — requires SEED_SECRET param
     @app.route('/admin/fetch-news')
     def admin_fetch_news():
