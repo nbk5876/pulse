@@ -273,6 +273,17 @@ def create_app():
         Topic.query.filter(Topic.id.in_(delete_ids)).delete(synchronize_session=False)
         db.session.commit()
 
+        from models.user import User
+        from models.thread import ThreadPost
+        bot = User.query.filter_by(username='Pulse Bot').first()
+        if bot:
+            total = Topic.query.count()
+            db.session.add(ThreadPost(
+                user_id=bot.id,
+                body=f'🧹 Topic cleanup · removed {len(delete_ids)} old unengaged topics · {total} remaining'
+            ))
+            db.session.commit()
+
         return jsonify({'deleted': len(delete_ids), 'message': f'Removed {len(delete_ids)} old unengaged topics.'})
 
     # Fetch news route — requires SEED_SECRET param
@@ -289,6 +300,26 @@ def create_app():
             import traceback
             result = {'error': str(e), 'traceback': traceback.format_exc()}
         return jsonify(result)
+
+    @app.route('/admin/create-bot-user')
+    def admin_create_bot_user():
+        from flask import request as flask_req
+        from werkzeug.security import generate_password_hash
+        from models.user import User
+        seed_secret = os.environ.get('SEED_SECRET')
+        if not seed_secret or flask_req.args.get('secret') != seed_secret:
+            return 'Not available.', 403
+        existing = User.query.filter_by(username='Pulse Bot').first()
+        if existing:
+            return jsonify({'ok': True, 'message': f'Pulse Bot already exists (id={existing.id})'})
+        bot = User(
+            username='Pulse Bot',
+            email='pulsebot@pulse.internal',
+            password_hash=generate_password_hash(os.urandom(32).hex()),
+        )
+        db.session.add(bot)
+        db.session.commit()
+        return jsonify({'ok': True, 'message': f'Pulse Bot created (id={bot.id})'})
 
     # Seed route — requires SEED_SECRET param
     @app.route('/admin/seed')

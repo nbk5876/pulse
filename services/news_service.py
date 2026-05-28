@@ -244,6 +244,18 @@ def classify_articles(articles):
             if item.get('category') in VALID_CATEGORIES}
 
 
+def _post_as_bot(body):
+    try:
+        from models.user import User
+        from models.thread import ThreadPost
+        bot = User.query.filter_by(username='Pulse Bot').first()
+        if bot:
+            db.session.add(ThreadPost(user_id=bot.id, body=body))
+            db.session.commit()
+    except Exception as e:
+        print(f'Bot Thread post failed: {e}')
+
+
 def fetch_and_store_news():
     if not os.environ.get('OPENAI_API_KEY'):
         return {'error': 'OPENAI_API_KEY not set'}
@@ -293,4 +305,6 @@ def fetch_and_store_news():
 
     db.session.commit()
     print(f'Done: {added} added, {skipped} skipped.')
+    now = datetime.now(timezone.utc).strftime('%b %d %I:%M %p')
+    _post_as_bot(f'📰 News fetch · {added} topics added · {skipped} skipped · {now} UTC')
     return {'added': added, 'skipped': skipped}
